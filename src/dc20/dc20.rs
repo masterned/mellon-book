@@ -6,17 +6,17 @@ use crate::utils::SwapResult;
 
 #[derive(Clone, Debug, Default)]
 pub struct CharacterBuilder {
-    player_name: Option<String>,
-    character_name: Option<String>,
-    class: Option<Class>,
-    ancestry: Option<Ancestry>,
-    background: Option<Background>,
-    level: Level,
-    stats: Option<Vec<Stat>>,
-    trades: Vec<Skill>,
-    languages: Option<Vec<Language>>,
-    physical_defense: Option<Defense>,
-    mystical_defense: Option<Defense>,
+    pub player_name: Option<String>,
+    pub character_name: Option<String>,
+    pub class: Option<Class>,
+    pub ancestry: Option<Ancestry>,
+    pub background: Option<Background>,
+    pub level: Level,
+    pub stats: Option<Vec<Stat>>,
+    pub trades: Vec<Skill>,
+    pub languages: Option<Vec<Language>>,
+    pub physical_defense: Option<Defense>,
+    pub mystical_defense: Option<Defense>,
 }
 
 impl CharacterBuilder {
