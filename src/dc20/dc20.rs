@@ -274,6 +274,7 @@ impl TryFrom<CharacterBuilder> for Character {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Class {
+    pub uuid: Uuid,
     pub name: String,
     subclass: Option<Subclass>,
 }
@@ -281,6 +282,7 @@ pub struct Class {
 impl Class {
     pub fn new(name: impl Into<String>) -> Self {
         Class {
+            uuid: Uuid::new_v4(),
             name: name.into(),
             subclass: None,
         }
@@ -296,34 +298,46 @@ impl Class {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Subclass {
+    pub uuid: Uuid,
     pub name: String,
 }
 
 impl Subclass {
     pub fn new(name: impl Into<String>) -> Self {
-        Self { name: name.into() }
+        Self {
+            uuid: Uuid::new_v4(),
+            name: name.into(),
+        }
     }
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Ancestry {
+    pub uuid: Uuid,
     pub name: String,
 }
 
 impl Ancestry {
     pub fn new(name: impl Into<String>) -> Self {
-        Self { name: name.into() }
+        Self {
+            uuid: Uuid::new_v4(),
+            name: name.into(),
+        }
     }
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Background {
+    pub uuid: Uuid,
     pub name: String,
 }
 
 impl Background {
     pub fn new(name: impl Into<String>) -> Self {
-        Self { name: name.into() }
+        Self {
+            uuid: Uuid::new_v4(),
+            name: name.into(),
+        }
     }
 }
 
@@ -371,6 +385,7 @@ impl Stat {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Skill {
+    pub uuid: Uuid,
     pub name: String,
     pub mastery: Option<Mastery>,
 }
@@ -386,6 +401,20 @@ impl Skill {
     }
 }
 
+impl Skill {
+    pub fn new(name: impl Into<String>) -> Self {
+        Skill {
+            uuid: Uuid::new_v4(),
+            name: name.into(),
+            mastery: None,
+        }
+    }
+
+    pub fn set_mastery(&mut self, mastery: Mastery) {
+        let _ = self.mastery.insert(mastery);
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Fluency {
     Limited,
@@ -394,8 +423,23 @@ pub enum Fluency {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Language {
+    pub uuid: Uuid,
     pub name: String,
     pub fluency: Fluency,
+}
+
+impl Language {
+    pub fn new(name: impl Into<String>) -> Self {
+        Language {
+            uuid: Uuid::new_v4(),
+            name: name.into(),
+            fluency: Fluency::Limited,
+        }
+    }
+
+    pub fn set_fluency(&mut self, fluency: Fluency) {
+        self.fluency = fluency;
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -471,25 +515,29 @@ mod tests {
             ]))
         );
 
+        let champion = Class::new("Champion");
+        let human = Ancestry::new("Human");
+        let soldier = Background::new("Soldier");
+
+        let mut perception = Skill::new("Perception");
+        perception.set_mastery(Mastery::Novice);
+
+        let mut common = Language::new("Common");
+        common.set_fluency(Fluency::Fluent);
+
         let mut character = CharacterBuilder::new()
             .player_name("John Doe")
             .character_name("Johannas Doeworth")
-            .class(Class::new("Champion"))
-            .ancestry(Ancestry::new("Human"))
-            .background(Background::new("Soldier"))
+            .class(champion.clone())
+            .ancestry(human.clone())
+            .background(soldier.clone())
             .add_stat(Stat {
                 name: "Prime".to_string(),
                 score: 3,
                 save_proficiency: false,
-                skills: vec![Skill {
-                    name: "Perception".to_string(),
-                    mastery: Some(Mastery::Novice),
-                }],
+                skills: vec![perception.clone()],
             })
-            .add_language(Language {
-                name: "Common".into(),
-                fluency: Fluency::Fluent,
-            })
+            .add_language(common.clone())
             .physical_defense(Defense {
                 name: "Physical Defense".into(),
                 score: 10,
@@ -502,33 +550,27 @@ mod tests {
             })
             .build()?;
 
-        let uuid = Uuid::new_v4();
-        character.id = uuid;
+        let char_id = Uuid::new_v4();
+        character.id = char_id;
 
         assert_eq!(
             character,
             Character {
-                id: uuid,
+                id: char_id,
                 player_name: "John Doe".to_string(),
                 character_name: "Johannas Doeworth".to_string(),
-                class: Class::new("Champion"),
-                ancestry: Ancestry::new("Human"),
-                background: Background::new("Soldier"),
+                class: champion,
+                ancestry: human,
+                background: soldier,
                 level: Level::default(),
                 stats: vec![Stat {
                     name: "Prime".to_string(),
                     score: 3,
                     save_proficiency: false,
-                    skills: vec![Skill {
-                        name: "Perception".to_string(),
-                        mastery: Some(Mastery::Novice)
-                    }]
+                    skills: vec![perception]
                 }],
                 trades: vec![],
-                languages: vec![Language {
-                    name: "Common".to_string(),
-                    fluency: Fluency::Fluent
-                }],
+                languages: vec![common],
                 physical_defense: Defense {
                     name: "Physical Defense".to_string(),
                     score: 10,

@@ -3,6 +3,15 @@ use std::error::Error;
 use mellon_book::dc20::*;
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let mut perception = Skill::new("Perception");
+    perception.set_mastery(Mastery::Novice);
+
+    let mut engineering = Skill::new("Engineering");
+    engineering.set_mastery(Mastery::Novice);
+
+    let mut common = Language::new("Common");
+    common.set_fluency(Fluency::Fluent);
+
     let character = CharacterBuilder::default()
         .player_name("Spencer")
         .character_name("Cygnus")
@@ -13,10 +22,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             name: "Prime".into(),
             score: 4,
             save_proficiency: false,
-            skills: vec![Skill {
-                name: "Perception".to_string(),
-                mastery: Some(Mastery::Novice),
-            }],
+            skills: vec![perception],
         })
         .add_stat(Stat {
             name: "Strength".into(),
@@ -30,14 +36,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             save_proficiency: true,
             skills: vec![],
         })
-        .add_trade(Skill {
-            name: "Engineering".into(),
-            mastery: Some(Mastery::Novice),
-        })
-        .add_language(Language {
-            name: "Common".into(),
-            fluency: Fluency::Fluent,
-        })
+        .add_trade(engineering)
+        .add_language(common)
         .physical_defense(Defense {
             name: "Physical Defense".into(),
             score: 10,
