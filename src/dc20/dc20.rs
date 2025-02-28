@@ -4,6 +4,8 @@ use uuid::Uuid;
 
 use crate::utils::SwapResult;
 
+use super::{Ancestry, Background, Class, Language, Skill, Stat};
+
 #[derive(Clone, Debug, Default)]
 pub struct CharacterBuilder {
     pub player_name: Option<String>,
@@ -272,75 +274,6 @@ impl TryFrom<CharacterBuilder> for Character {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct Class {
-    pub uuid: Uuid,
-    pub name: String,
-    subclass: Option<Subclass>,
-}
-
-impl Class {
-    pub fn new(name: impl Into<String>) -> Self {
-        Class {
-            uuid: Uuid::new_v4(),
-            name: name.into(),
-            subclass: None,
-        }
-    }
-
-    #[must_use]
-    pub fn add_subclass(mut self, subclass: Subclass) -> Self {
-        let _ = self.subclass.insert(subclass);
-
-        self
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Subclass {
-    pub uuid: Uuid,
-    pub name: String,
-}
-
-impl Subclass {
-    pub fn new(name: impl Into<String>) -> Self {
-        Self {
-            uuid: Uuid::new_v4(),
-            name: name.into(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Ancestry {
-    pub uuid: Uuid,
-    pub name: String,
-}
-
-impl Ancestry {
-    pub fn new(name: impl Into<String>) -> Self {
-        Self {
-            uuid: Uuid::new_v4(),
-            name: name.into(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Background {
-    pub uuid: Uuid,
-    pub name: String,
-}
-
-impl Background {
-    pub fn new(name: impl Into<String>) -> Self {
-        Self {
-            uuid: Uuid::new_v4(),
-            name: name.into(),
-        }
-    }
-}
-
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Level(usize);
 
@@ -354,91 +287,6 @@ impl Level {
 impl Default for Level {
     fn default() -> Self {
         Level(1)
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Mastery {
-    Novice = 2,
-    Adept = 4,
-    Expert = 6,
-    Master = 8,
-    GrandMaster = 10,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Stat {
-    pub name: String,
-    pub score: isize,
-    pub save_proficiency: bool,
-    pub skills: Vec<Skill>,
-}
-
-impl Stat {
-    #[must_use]
-    pub fn calc_save(&self, level: Level) -> isize {
-        self.score
-            .checked_add_unsigned(level.calc_combat_mastery())
-            .unwrap()
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Skill {
-    pub uuid: Uuid,
-    pub name: String,
-    pub mastery: Option<Mastery>,
-}
-
-impl Skill {
-    #[must_use]
-    pub fn calc_score(&self, stat: &Stat) -> isize {
-        if let Some(mastery) = self.mastery {
-            mastery as isize + stat.score
-        } else {
-            stat.score
-        }
-    }
-}
-
-impl Skill {
-    pub fn new(name: impl Into<String>) -> Self {
-        Skill {
-            uuid: Uuid::new_v4(),
-            name: name.into(),
-            mastery: None,
-        }
-    }
-
-    pub fn set_mastery(&mut self, mastery: Mastery) {
-        let _ = self.mastery.insert(mastery);
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Fluency {
-    Limited,
-    Fluent,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Language {
-    pub uuid: Uuid,
-    pub name: String,
-    pub fluency: Fluency,
-}
-
-impl Language {
-    pub fn new(name: impl Into<String>) -> Self {
-        Language {
-            uuid: Uuid::new_v4(),
-            name: name.into(),
-            fluency: Fluency::Limited,
-        }
-    }
-
-    pub fn set_fluency(&mut self, fluency: Fluency) {
-        self.fluency = fluency;
     }
 }
 
@@ -463,6 +311,8 @@ impl Defense {
 
 #[cfg(test)]
 mod tests {
+    use crate::dc20::{Fluency, Mastery};
+
     use super::*;
 
     #[test]
