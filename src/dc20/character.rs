@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::utils::SwapResult;
 
-use super::{Ancestry, Background, Class, Language, Skill, Stat};
+use super::{Ancestry, Attribute, Background, Class, Language, Skill};
 
 #[derive(Clone, Debug, Default)]
 pub struct CharacterBuilder {
@@ -14,7 +14,7 @@ pub struct CharacterBuilder {
     pub ancestry: Option<Ancestry>,
     pub background: Option<Background>,
     pub level: Level,
-    pub stats: Option<Vec<Stat>>,
+    pub attributes: Option<Vec<Attribute>>,
     pub trades: Vec<Skill>,
     pub languages: Option<Vec<Language>>,
     pub physical_defense: Option<Defense>,
@@ -71,8 +71,8 @@ impl CharacterBuilder {
     }
 
     #[must_use]
-    pub fn add_stat(mut self, stat: Stat) -> Self {
-        self.stats.get_or_insert_default().push(stat);
+    pub fn add_attribute(mut self, attribute: Attribute) -> Self {
+        self.attributes.get_or_insert_default().push(attribute);
 
         self
     }
@@ -119,7 +119,7 @@ pub struct Character {
     ancestry: Ancestry,
     background: Background,
     level: Level,
-    stats: Vec<Stat>,
+    attributes: Vec<Attribute>,
     trades: Vec<Skill>,
     languages: Vec<Language>,
     physical_defense: Defense,
@@ -163,8 +163,8 @@ impl Character {
     }
 
     #[must_use]
-    pub fn stats(&self) -> &[Stat] {
-        &self.stats
+    pub fn attributes(&self) -> &[Attribute] {
+        &self.attributes
     }
 
     #[must_use]
@@ -250,7 +250,7 @@ impl TryFrom<CharacterBuilder> for Character {
         aggregator.field_check(&value.class, "Class");
         aggregator.field_check(&value.ancestry, "Ancestry");
         aggregator.field_check(&value.background, "Background");
-        aggregator.field_check(&value.stats, "Stats");
+        aggregator.field_check(&value.attributes, "Attributes");
         aggregator.field_check(&value.languages, "Languages");
         aggregator.field_check(&value.physical_defense, "Physical Defense");
         aggregator.field_check(&value.mystical_defense, "Mystical Defense");
@@ -265,7 +265,7 @@ impl TryFrom<CharacterBuilder> for Character {
             ancestry: value.ancestry.unwrap(),
             background: value.background.unwrap(),
             level: value.level,
-            stats: value.stats.unwrap(),
+            attributes: value.attributes.unwrap(),
             trades,
             languages: value.languages.unwrap(),
             physical_defense: value.physical_defense.unwrap(),
@@ -326,7 +326,7 @@ mod tests {
                 "Class",
                 "Ancestry",
                 "Background",
-                "Stats",
+                "Attributes",
                 "Languages",
                 "Physical Defense",
                 "Mystical Defense"
@@ -341,7 +341,7 @@ mod tests {
                 "Class",
                 "Ancestry",
                 "Background",
-                "Stats",
+                "Attributes",
                 "Languages",
                 "Physical Defense",
                 "Mystical Defense"
@@ -358,7 +358,7 @@ mod tests {
                 "Character Name",
                 "Class",
                 "Background",
-                "Stats",
+                "Attributes",
                 "Languages",
                 "Physical Defense",
                 "Mystical Defense"
@@ -381,7 +381,7 @@ mod tests {
             .class(champion.clone())
             .ancestry(human.clone())
             .background(soldier.clone())
-            .add_stat(Stat {
+            .add_attribute(Attribute {
                 name: "Prime".to_string(),
                 score: 3,
                 save_proficiency: false,
@@ -413,7 +413,7 @@ mod tests {
                 ancestry: human,
                 background: soldier,
                 level: Level::default(),
-                stats: vec![Stat {
+                attributes: vec![Attribute {
                     name: "Prime".to_string(),
                     score: 3,
                     save_proficiency: false,

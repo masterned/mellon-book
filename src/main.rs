@@ -18,19 +18,19 @@ fn main() -> Result<(), Box<dyn Error>> {
         .class(Class::new("Sorcerer"))
         .ancestry(Ancestry::new("Human/Psyborn"))
         .background(Background::new("Bounty Hunter"))
-        .add_stat(Stat {
+        .add_attribute(Attribute {
             name: "Prime".into(),
             score: 4,
             save_proficiency: false,
             skills: vec![perception],
         })
-        .add_stat(Stat {
+        .add_attribute(Attribute {
             name: "Strength".into(),
             score: 0,
             save_proficiency: false,
             skills: vec![],
         })
-        .add_stat(Stat {
+        .add_attribute(Attribute {
             name: "Dexterity".into(),
             score: 1,
             save_proficiency: true,

@@ -12,14 +12,14 @@ pub enum Mastery {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Stat {
+pub struct Attribute {
     pub name: String,
     pub score: isize,
     pub save_proficiency: bool,
     pub skills: Vec<Skill>,
 }
 
-impl Stat {
+impl Attribute {
     #[must_use]
     pub fn calc_save(&self, level: Level) -> isize {
         if self.save_proficiency {
@@ -53,11 +53,11 @@ impl Skill {
     }
 
     #[must_use]
-    pub fn calc_score(&self, stat: &Stat) -> isize {
+    pub fn calc_score(&self, attribute: &Attribute) -> isize {
         if let Some(mastery) = self.mastery {
-            mastery as isize + stat.score
+            mastery as isize + attribute.score
         } else {
-            stat.score
+            attribute.score
         }
     }
 }
@@ -66,50 +66,46 @@ impl Skill {
 mod tests {
     use super::*;
 
-    mod stat {
-        use super::*;
+    #[test]
+    fn _attribute_without_save_mastery_should_have_save_of_attribute_score() {
+        let attribute = Attribute {
+            name: "Test Stat".into(),
+            score: 3,
+            save_proficiency: false,
+            skills: vec![],
+        };
 
-        #[test]
-        fn _stat_without_save_mastery_should_have_save_of_stat_score() {
-            let stat = Stat {
-                name: "Test Stat".into(),
-                score: 3,
-                save_proficiency: false,
-                skills: vec![],
-            };
+        assert_eq!(attribute.calc_save(Level::default()), attribute.score);
+    }
 
-            assert_eq!(stat.calc_save(Level::default()), stat.score);
-        }
+    #[test]
+    fn _attribute_with_save_mastery_should_add_combat_mastery_to_save() {
+        let attribute = Attribute {
+            name: "Test Stat".into(),
+            score: 3,
+            save_proficiency: true,
+            skills: vec![],
+        };
+        let level = Level::default();
+        let combat_mastery = level.calc_combat_mastery() as isize;
 
-        #[test]
-        fn _stat_with_save_mastery_should_add_combat_mastery_to_save() {
-            let stat = Stat {
-                name: "Test Stat".into(),
-                score: 3,
-                save_proficiency: true,
-                skills: vec![],
-            };
-            let level = Level::default();
-            let combat_mastery = level.calc_combat_mastery() as isize;
-
-            assert_eq!(stat.calc_save(level), stat.score + combat_mastery)
-        }
+        assert_eq!(attribute.calc_save(level), attribute.score + combat_mastery)
     }
 
     mod skill {
         use super::*;
 
         #[test]
-        fn _skill_without_mastery_should_have_same_score_as_stat() {
+        fn _skill_without_mastery_should_have_same_score_as_attribute() {
             let skill = Skill::new("Test Skill");
-            let stat = Stat {
+            let attribute = Attribute {
                 name: "Intelligence".into(),
                 score: 3,
                 save_proficiency: true,
                 skills: vec![skill.clone()],
             };
 
-            assert_eq!(skill.calc_score(&stat), stat.score);
+            assert_eq!(skill.calc_score(&attribute), attribute.score);
         }
 
         #[test]
@@ -117,14 +113,14 @@ mod tests {
             let mut skill = Skill::new("Test Skill");
             skill.set_mastery(Mastery::Novice);
 
-            let stat = Stat {
+            let attribute = Attribute {
                 name: "Intelligence".into(),
                 score: 3,
                 save_proficiency: true,
                 skills: vec![skill.clone()],
             };
 
-            assert_eq!(skill.calc_score(&stat), stat.score + 2);
+            assert_eq!(skill.calc_score(&attribute), attribute.score + 2);
         }
     }
 }
