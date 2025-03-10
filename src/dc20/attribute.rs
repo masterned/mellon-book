@@ -11,6 +11,19 @@ pub enum Mastery {
     GrandMaster = 10,
 }
 
+pub struct Attributes(pub Vec<Attribute>);
+
+impl Default for Attributes {
+    fn default() -> Self {
+        Attributes(vec![Attribute {
+            name: "Strength".into(),
+            score: 0,
+            save_proficiency: false,
+            skills: vec![],
+        }])
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Attribute {
     pub name: String,
