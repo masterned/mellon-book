@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::utils::SwapResult;
 
-use super::{Ancestry, Attribute, Background, Class, Language, Skill};
+use super::{Ancestry, Attribute, Background, Class};
 
 #[derive(Clone, Debug, Default)]
 pub struct CharacterBuilder {
@@ -15,8 +15,6 @@ pub struct CharacterBuilder {
     pub background: Option<Background>,
     pub level: Level,
     pub attributes: Option<Vec<Attribute>>,
-    pub trades: Vec<Skill>,
-    pub languages: Option<Vec<Language>>,
     pub physical_defense: Option<Defense>,
     pub mystical_defense: Option<Defense>,
 }
@@ -78,20 +76,6 @@ impl CharacterBuilder {
     }
 
     #[must_use]
-    pub fn add_trade(mut self, trade: Skill) -> Self {
-        self.trades.push(trade);
-
-        self
-    }
-
-    #[must_use]
-    pub fn add_language(mut self, language: Language) -> Self {
-        self.languages.get_or_insert_default().push(language);
-
-        self
-    }
-
-    #[must_use]
     pub fn physical_defense(mut self, physical_defense: Defense) -> Self {
         let _ = self.physical_defense.insert(physical_defense);
 
@@ -120,8 +104,6 @@ pub struct Character {
     background: Background,
     level: Level,
     attributes: Vec<Attribute>,
-    trades: Vec<Skill>,
-    languages: Vec<Language>,
     physical_defense: Defense,
     mystical_defense: Defense,
 }
@@ -168,16 +150,6 @@ impl Character {
     }
 
     #[must_use]
-    pub fn trades(&self) -> &[Skill] {
-        &self.trades
-    }
-
-    #[must_use]
-    pub fn languages(&self) -> &[Language] {
-        &self.languages
-    }
-
-    #[must_use]
     pub fn physical_defense(&self) -> &Defense {
         &self.physical_defense
     }
@@ -215,14 +187,14 @@ impl fmt::Display for CharacterBuildError {
 }
 
 #[derive(Clone, Debug, Default)]
-struct FieldAggregator(Option<Vec<&'static str>>);
+pub struct FieldAggregator(pub Option<Vec<&'static str>>);
 
 impl FieldAggregator {
-    fn new() -> Self {
+    pub fn new() -> Self {
         FieldAggregator::default()
     }
 
-    fn field_check<T>(&mut self, field: &Option<T>, field_name: &'static str) {
+    pub fn field_check<T>(&mut self, field: &Option<T>, field_name: &'static str) {
         if field.is_none() {
             self.0.get_or_insert_default().push(field_name);
         }
@@ -241,8 +213,6 @@ impl TryFrom<CharacterBuilder> for Character {
     type Error = CharacterBuildError;
 
     fn try_from(value: CharacterBuilder) -> Result<Self, Self::Error> {
-        let CharacterBuilder { trades, .. } = value;
-
         let mut aggregator = FieldAggregator::new();
 
         aggregator.field_check(&value.player_name, "Player Name");
@@ -251,7 +221,6 @@ impl TryFrom<CharacterBuilder> for Character {
         aggregator.field_check(&value.ancestry, "Ancestry");
         aggregator.field_check(&value.background, "Background");
         aggregator.field_check(&value.attributes, "Attributes");
-        aggregator.field_check(&value.languages, "Languages");
         aggregator.field_check(&value.physical_defense, "Physical Defense");
         aggregator.field_check(&value.mystical_defense, "Mystical Defense");
 
@@ -266,8 +235,6 @@ impl TryFrom<CharacterBuilder> for Character {
             background: value.background.unwrap(),
             level: value.level,
             attributes: value.attributes.unwrap(),
-            trades,
-            languages: value.languages.unwrap(),
             physical_defense: value.physical_defense.unwrap(),
             mystical_defense: value.mystical_defense.unwrap(),
         })
@@ -311,7 +278,7 @@ impl Defense {
 
 #[cfg(test)]
 mod tests {
-    use crate::dc20::{Fluency, Mastery};
+    use crate::dc20::{background, Fluency, Language, Mastery, Skill};
 
     use super::*;
 
@@ -327,7 +294,6 @@ mod tests {
                 "Ancestry",
                 "Background",
                 "Attributes",
-                "Languages",
                 "Physical Defense",
                 "Mystical Defense"
             ]))
@@ -342,7 +308,6 @@ mod tests {
                 "Ancestry",
                 "Background",
                 "Attributes",
-                "Languages",
                 "Physical Defense",
                 "Mystical Defense"
             ]))
@@ -359,7 +324,6 @@ mod tests {
                 "Class",
                 "Background",
                 "Attributes",
-                "Languages",
                 "Physical Defense",
                 "Mystical Defense"
             ]))
@@ -367,7 +331,12 @@ mod tests {
 
         let champion = Class::new("Champion");
         let human = Ancestry::new("Human");
-        let soldier = Background::new("Soldier");
+
+        let soldier = background::Builder::new("Soldier")
+            .add_skill(Skill::new("Athletics"))
+            .add_trade(Skill::new("Blacksmithing"))
+            .add_language(Language::new("Common"))
+            .build()?;
 
         let mut perception = Skill::new("Perception");
         perception.set_mastery(Mastery::Novice);
@@ -387,7 +356,6 @@ mod tests {
                 save_proficiency: false,
                 skills: vec![perception.clone()],
             })
-            .add_language(common.clone())
             .physical_defense(Defense {
                 name: "Physical Defense".into(),
                 score: 10,
@@ -419,8 +387,6 @@ mod tests {
                     save_proficiency: false,
                     skills: vec![perception]
                 }],
-                trades: vec![],
-                languages: vec![common],
                 physical_defense: Defense {
                     name: "Physical Defense".to_string(),
                     score: 10,

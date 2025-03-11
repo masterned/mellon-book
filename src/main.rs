@@ -17,7 +17,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         .character_name("Cygnus")
         .class(Class::new("Sorcerer"))
         .ancestry(Ancestry::new("Human/Psyborn"))
-        .background(Background::new("Bounty Hunter"))
         .add_attribute(Attribute {
             name: "Prime".into(),
             score: 4,
@@ -36,8 +35,6 @@ fn main() -> Result<(), Box<dyn Error>> {
             save_proficiency: true,
             skills: vec![],
         })
-        .add_trade(engineering)
-        .add_language(common)
         .physical_defense(Defense {
             name: "Physical Defense".into(),
             score: 10,
