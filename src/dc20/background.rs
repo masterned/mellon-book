@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::utils::SwapResult;
 
-use super::{FieldAggregator, Language, Skill};
+use super::{FieldAggregator, LanguageFluency, Skill};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Builder {
@@ -13,7 +13,7 @@ pub struct Builder {
     pub name: Option<String>,
     pub skills: Option<Vec<Skill>>,
     pub trades: Option<Vec<Skill>>,
-    pub languages: Option<Vec<Language>>,
+    pub language_fluencies: Option<Vec<LanguageFluency>>,
 }
 
 impl Builder {
@@ -45,8 +45,11 @@ impl Builder {
         self
     }
 
-    pub fn add_language(mut self, language: Language) -> Self {
-        let _ = self.languages.get_or_insert_default().push(language);
+    pub fn add_language_fluency(mut self, language_fluency: LanguageFluency) -> Self {
+        let _ = self
+            .language_fluencies
+            .get_or_insert_default()
+            .push(language_fluency);
 
         self
     }
@@ -99,7 +102,7 @@ impl TryFrom<Builder> for Background {
         aggregator.field_check(&value.name, "Name");
         aggregator.field_check(&value.skills, "Skills");
         aggregator.field_check(&value.trades, "Trades");
-        aggregator.field_check(&value.languages, "Languages");
+        aggregator.field_check(&value.language_fluencies, "Language Fluencies");
 
         BuildError::try_from(aggregator).swap()?;
 
@@ -108,7 +111,7 @@ impl TryFrom<Builder> for Background {
             name: value.name.unwrap(),
             skills: value.skills.unwrap(),
             trades: value.trades.unwrap(),
-            languages: value.languages.unwrap(),
+            language_fluencies: value.language_fluencies.unwrap(),
         })
     }
 }
@@ -119,7 +122,7 @@ pub struct Background {
     pub name: String,
     pub skills: Vec<Skill>,
     pub trades: Vec<Skill>,
-    pub languages: Vec<Language>,
+    pub language_fluencies: Vec<LanguageFluency>,
 }
 
 #[cfg(test)]
@@ -135,7 +138,7 @@ mod tests {
             Err(BuildError::FieldMissing(vec![
                 "Skills",
                 "Trades",
-                "Languages"
+                "Language Fluencies"
             ]))
         );
 
@@ -143,18 +146,21 @@ mod tests {
         let builder = builder.add_skill(athletics.clone());
         assert_eq!(
             builder.clone().build(),
-            Err(BuildError::FieldMissing(vec!["Trades", "Languages"]))
+            Err(BuildError::FieldMissing(vec![
+                "Trades",
+                "Language Fluencies"
+            ]))
         );
 
         let blacksmithing = Skill::new("Blacksmithing");
         let builder = builder.add_trade(blacksmithing.clone());
         assert_eq!(
             builder.clone().build(),
-            Err(BuildError::FieldMissing(vec!["Languages"]))
+            Err(BuildError::FieldMissing(vec!["Language Fluencies"]))
         );
 
-        let common = Language::new("Common");
-        let builder = builder.add_language(common.clone());
+        let common = LanguageFluency::common();
+        let builder = builder.add_language_fluency(common.clone());
         assert_eq!(
             builder.clone().build(),
             Ok(Background {
@@ -162,7 +168,7 @@ mod tests {
                 name: "Soldier".into(),
                 skills: vec![athletics],
                 trades: vec![blacksmithing],
-                languages: vec![common]
+                language_fluencies: vec![common]
             })
         );
 

@@ -9,9 +9,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut engineering = Skill::new("Engineering");
     engineering.set_mastery(Mastery::Novice);
 
-    let mut common = Language::new("Common");
-    common.set_fluency(Fluency::Fluent);
-
     let character = CharacterBuilder::default()
         .player_name("Spencer")
         .character_name("Cygnus")

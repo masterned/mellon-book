@@ -278,7 +278,7 @@ impl Defense {
 
 #[cfg(test)]
 mod tests {
-    use crate::dc20::{background, Fluency, Language, Mastery, Skill};
+    use crate::dc20::{background, LanguageFluency, Mastery, Skill};
 
     use super::*;
 
@@ -335,14 +335,11 @@ mod tests {
         let soldier = background::Builder::new("Soldier")
             .add_skill(Skill::new("Athletics"))
             .add_trade(Skill::new("Blacksmithing"))
-            .add_language(Language::new("Common"))
+            .add_language_fluency(LanguageFluency::common())
             .build()?;
 
         let mut perception = Skill::new("Perception");
         perception.set_mastery(Mastery::Novice);
-
-        let mut common = Language::new("Common");
-        common.set_fluency(Fluency::Fluent);
 
         let mut character = CharacterBuilder::new()
             .player_name("John Doe")

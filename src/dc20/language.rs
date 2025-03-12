@@ -1,28 +1,33 @@
-use uuid::Uuid;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Fluency {
     Limited,
     Fluent,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Language {
-    pub uuid: Uuid,
     pub name: String,
-    pub fluency: Fluency,
 }
 
 impl Language {
     pub fn new(name: impl Into<String>) -> Self {
-        Language {
-            uuid: Uuid::new_v4(),
-            name: name.into(),
-            fluency: Fluency::Limited,
-        }
+        Language { name: name.into() }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LanguageFluency(pub Language, pub Fluency);
+
+impl LanguageFluency {
+    pub fn common() -> Self {
+        LanguageFluency(Language::new("Common"), Fluency::Fluent)
     }
 
-    pub fn set_fluency(&mut self, fluency: Fluency) {
-        self.fluency = fluency;
+    pub fn limited_in(language: Language) -> Self {
+        LanguageFluency(language, Fluency::Limited)
+    }
+
+    pub fn fluent_in(language: Language) -> Self {
+        LanguageFluency(language, Fluency::Fluent)
     }
 }
