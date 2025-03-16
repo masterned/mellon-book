@@ -34,20 +34,19 @@ impl Builder {
     }
 
     pub fn add_skill(mut self, skill: Skill) -> Self {
-        let _ = self.skills.get_or_insert_default().push(skill);
+        self.skills.get_or_insert_default().push(skill);
 
         self
     }
 
     pub fn add_trade(mut self, trade: Skill) -> Self {
-        let _ = self.trades.get_or_insert_default().push(trade);
+        self.trades.get_or_insert_default().push(trade);
 
         self
     }
 
     pub fn add_language_fluency(mut self, language_fluency: LanguageFluency) -> Self {
-        let _ = self
-            .language_fluencies
+        self.language_fluencies
             .get_or_insert_default()
             .push(language_fluency);
 
