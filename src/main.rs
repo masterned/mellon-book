@@ -7,7 +7,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         .player_name("Spencer")
         .character_name("Cygnus")
         .class(Class::new("Sorcerer"))
-        .ancestry(Ancestry::new("Human/Psyborn"))
+        .origin(Origin::HyridBred(
+            Ancestry::new("Human"),
+            Ancestry::new("Psyborn"),
+        ))
         .background(
             background::Builder::new("Bounty Hunter")
                 .add_trade(Skill::new("Engineering").with_mastery(Mastery::Novice))

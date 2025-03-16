@@ -4,14 +4,14 @@ use uuid::Uuid;
 
 use crate::utils::{FieldAggregator, SwapResult};
 
-use super::{Ancestry, Attributes, Background, Class};
+use super::{Attributes, Background, Class, Origin};
 
 #[derive(Clone, Debug, Default)]
 pub struct CharacterBuilder {
     pub player_name: Option<String>,
     pub character_name: Option<String>,
     pub class: Option<Class>,
-    pub ancestry: Option<Ancestry>,
+    pub ancestry: Option<Origin>,
     pub background: Option<Background>,
     pub level: Level,
     pub attributes: Option<Attributes>,
@@ -55,8 +55,8 @@ impl CharacterBuilder {
     }
 
     #[must_use]
-    pub fn ancestry(mut self, ancestry: Ancestry) -> Self {
-        let _ = self.ancestry.insert(ancestry);
+    pub fn origin(mut self, origin: Origin) -> Self {
+        let _ = self.ancestry.insert(origin);
 
         self
     }
@@ -100,7 +100,7 @@ pub struct Character {
     player_name: String,
     character_name: String,
     class: Class,
-    ancestry: Ancestry,
+    ancestry: Origin,
     background: Background,
     level: Level,
     attributes: Attributes,
@@ -130,7 +130,7 @@ impl Character {
     }
 
     #[must_use]
-    pub fn ancestry(&self) -> &Ancestry {
+    pub fn ancestry(&self) -> &Origin {
         &self.ancestry
     }
 
@@ -263,7 +263,9 @@ impl Defense {
 
 #[cfg(test)]
 mod tests {
-    use crate::dc20::{background, Attribute, AttributesBuilder, LanguageFluency, Mastery, Skill};
+    use crate::dc20::{
+        background, Ancestry, Attribute, AttributesBuilder, LanguageFluency, Mastery, Skill,
+    };
 
     use super::*;
 
@@ -298,9 +300,11 @@ mod tests {
             ]))
         );
 
+        let human = Origin::PureBred(Ancestry::new("Human"));
+
         let result = CharacterBuilder::new()
             .player_name("John Doe")
-            .ancestry(Ancestry::new("Human"))
+            .origin(human.clone())
             .build();
         assert_eq!(
             result,
@@ -315,7 +319,6 @@ mod tests {
         );
 
         let champion = Class::new("Champion");
-        let human = Ancestry::new("Human");
 
         let soldier = background::Builder::new("Soldier")
             .add_skill(Skill::new("Athletics"))
@@ -339,7 +342,7 @@ mod tests {
             .player_name("John Doe")
             .character_name("Johannas Doeworth")
             .class(champion.clone())
-            .ancestry(human.clone())
+            .origin(human.clone())
             .background(soldier.clone())
             .attributes(attributes.clone())
             .physical_defense(Defense {

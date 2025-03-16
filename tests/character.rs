@@ -1,7 +1,7 @@
 use std::error::Error;
 
-use mellon_book::dc20::{background, AttributesBuilder, LanguageFluency};
-use mellon_book::dc20::{Ancestry, Attribute, CharacterBuilder, Class, Defense, Skill};
+use mellon_book::dc20::{background, Ancestry, AttributesBuilder, LanguageFluency, Origin};
+use mellon_book::dc20::{Attribute, CharacterBuilder, Class, Defense, Skill};
 
 #[test]
 fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
@@ -9,7 +9,7 @@ fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
         .player_name("Test Player")
         .character_name("Test Name")
         .class(Class::new("Warrior"))
-        .ancestry(Ancestry::new("Human"))
+        .origin(Origin::PureBred(Ancestry::new("Human")))
         .background(
             background::Builder::new("Soldier")
                 .add_skill(Skill::new("Athletics"))
