@@ -3,9 +3,9 @@ use std::error::Error;
 
 use uuid::Uuid;
 
-use crate::utils::SwapResult;
+use crate::utils::{FieldAggregator, SwapResult};
 
-use super::{FieldAggregator, LanguageFluency, Skill};
+use super::{LanguageFluency, Skill};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Builder {

@@ -2,9 +2,9 @@ use std::{error::Error, fmt, str::FromStr};
 
 use uuid::Uuid;
 
-use crate::utils::SwapResult;
+use crate::utils::{FieldAggregator, SwapResult};
 
-use super::{FieldAggregator, Level};
+use super::Level;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum AttributeName {

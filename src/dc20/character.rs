@@ -2,7 +2,7 @@ use core::fmt;
 use std::error::Error;
 use uuid::Uuid;
 
-use crate::utils::SwapResult;
+use crate::utils::{FieldAggregator, SwapResult};
 
 use super::{Ancestry, Attributes, Background, Class};
 
@@ -183,21 +183,6 @@ impl fmt::Display for CharacterBuildError {
                 ),
             }
         )
-    }
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct FieldAggregator(pub Option<Vec<&'static str>>);
-
-impl FieldAggregator {
-    pub fn new() -> Self {
-        FieldAggregator::default()
-    }
-
-    pub fn field_check<T>(&mut self, field: &Option<T>, field_name: &'static str) {
-        if field.is_none() {
-            self.0.get_or_insert_default().push(field_name);
-        }
     }
 }
 
