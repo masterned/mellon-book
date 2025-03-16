@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use mellon_book::dc20::{background, LanguageFluency};
+use mellon_book::dc20::{background, AttributesBuilder, LanguageFluency};
 use mellon_book::dc20::{Ancestry, Attribute, CharacterBuilder, Class, Defense, Skill};
 
 #[test]
@@ -17,12 +17,15 @@ fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
                 .add_language_fluency(LanguageFluency::common())
                 .build()?,
         )
-        .add_attribute(Attribute {
-            name: "Strength".into(),
-            score: 3,
-            save_proficiency: true,
-            skills: vec![],
-        })
+        .attributes(
+            AttributesBuilder::new()
+                .prime(Attribute::new().with_base_score(3).with_save_proficiency())
+                .might(Attribute::default())
+                .agility(Attribute::default())
+                .charisma(Attribute::default())
+                .intelligence(Attribute::default())
+                .build()?,
+        )
         .physical_defense(Defense {
             name: "Physical".into(),
             score: 10,

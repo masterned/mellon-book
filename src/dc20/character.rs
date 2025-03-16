@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::utils::SwapResult;
 
-use super::{Ancestry, Attribute, Background, Class};
+use super::{Ancestry, Attributes, Background, Class};
 
 #[derive(Clone, Debug, Default)]
 pub struct CharacterBuilder {
@@ -14,7 +14,7 @@ pub struct CharacterBuilder {
     pub ancestry: Option<Ancestry>,
     pub background: Option<Background>,
     pub level: Level,
-    pub attributes: Option<Vec<Attribute>>,
+    pub attributes: Option<Attributes>,
     pub physical_defense: Option<Defense>,
     pub mystical_defense: Option<Defense>,
 }
@@ -69,8 +69,8 @@ impl CharacterBuilder {
     }
 
     #[must_use]
-    pub fn add_attribute(mut self, attribute: Attribute) -> Self {
-        self.attributes.get_or_insert_default().push(attribute);
+    pub fn attributes(mut self, attributes: Attributes) -> Self {
+        let _ = self.attributes.insert(attributes);
 
         self
     }
@@ -103,7 +103,7 @@ pub struct Character {
     ancestry: Ancestry,
     background: Background,
     level: Level,
-    attributes: Vec<Attribute>,
+    attributes: Attributes,
     physical_defense: Defense,
     mystical_defense: Defense,
 }
@@ -145,7 +145,7 @@ impl Character {
     }
 
     #[must_use]
-    pub fn attributes(&self) -> &[Attribute] {
+    pub fn attributes(&self) -> &Attributes {
         &self.attributes
     }
 
@@ -278,7 +278,7 @@ impl Defense {
 
 #[cfg(test)]
 mod tests {
-    use crate::dc20::{background, LanguageFluency, Mastery, Skill};
+    use crate::dc20::{background, Attribute, AttributesBuilder, LanguageFluency, Mastery, Skill};
 
     use super::*;
 
@@ -338,8 +338,17 @@ mod tests {
             .add_language_fluency(LanguageFluency::common())
             .build()?;
 
-        let mut perception = Skill::new("Perception");
-        perception.set_mastery(Mastery::Novice);
+        let attributes = AttributesBuilder::new()
+            .prime(
+                Attribute::new()
+                    .with_base_score(3)
+                    .with_skill(Skill::new("Perception").with_mastery(Mastery::Novice)),
+            )
+            .might(Attribute::default())
+            .agility(Attribute::default())
+            .charisma(Attribute::default())
+            .intelligence(Attribute::default())
+            .build()?;
 
         let mut character = CharacterBuilder::new()
             .player_name("John Doe")
@@ -347,12 +356,7 @@ mod tests {
             .class(champion.clone())
             .ancestry(human.clone())
             .background(soldier.clone())
-            .add_attribute(Attribute {
-                name: "Prime".to_string(),
-                score: 3,
-                save_proficiency: false,
-                skills: vec![perception.clone()],
-            })
+            .attributes(attributes.clone())
             .physical_defense(Defense {
                 name: "Physical Defense".into(),
                 score: 10,
@@ -378,12 +382,7 @@ mod tests {
                 ancestry: human,
                 background: soldier,
                 level: Level::default(),
-                attributes: vec![Attribute {
-                    name: "Prime".to_string(),
-                    score: 3,
-                    save_proficiency: false,
-                    skills: vec![perception]
-                }],
+                attributes,
                 physical_defense: Defense {
                     name: "Physical Defense".to_string(),
                     score: 10,
