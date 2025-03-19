@@ -7,9 +7,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         .player_name("Spencer")
         .character_name("Cygnus")
         .class(Class::new("Sorcerer"))
-        .origin(Origin::HyridBred(
-            Ancestry::new("Human"),
-            Ancestry::new("Psyborn"),
+        .origin(Origin::HybridBred(
+            AncestryInstance::new("Human"),
+            AncestryInstance::new("Psyborn"),
         ))
         .background(
             background::Builder::new("Bounty Hunter")

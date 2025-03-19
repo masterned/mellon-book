@@ -264,7 +264,7 @@ impl Defense {
 #[cfg(test)]
 mod tests {
     use crate::dc20::{
-        background, Ancestry, Attribute, AttributesBuilder, LanguageFluency, Mastery, Skill,
+        background, AncestryInstance, Attribute, AttributesBuilder, LanguageFluency, Mastery, Skill,
     };
 
     use super::*;
@@ -300,7 +300,7 @@ mod tests {
             ]))
         );
 
-        let human = Origin::PureBred(Ancestry::new("Human"));
+        let human = Origin::PureBred(AncestryInstance::new("Human"));
 
         let result = CharacterBuilder::new()
             .player_name("John Doe")
