@@ -75,11 +75,11 @@ impl OriginBuilder {
         self.total_trait_points() < self.available_points
     }
 
-    fn has_single_0_point_trait(&self) -> bool {
+    fn zero_point_trait_count(&self) -> usize {
         self.ancestries.as_ref().map_or(0, |a_s| {
             a_s.iter()
                 .fold(0, |acc, a| acc + a.zero_point_traits().len())
-        }) == 1
+        })
     }
 
     pub fn build(self) -> Result<Origin, OriginBuildError> {
@@ -105,6 +105,7 @@ pub enum OriginBuildError {
     PointsExceeded,
     PointsRemaining,
     ZeroPointTraitMissing,
+    MultipleZeroPointTraits,
     AncestryError(InstanceBuildError),
 }
 
@@ -117,8 +118,9 @@ impl fmt::Display for OriginBuildError {
                 OriginBuildError::AncestryMissing => "Requires at least one Ancestry".to_string(),
                 OriginBuildError::PointsExceeded => "Too many Trait points used".into(),
                 OriginBuildError::PointsRemaining => "All Trait points must be used".into(),
-                OriginBuildError::ZeroPointTraitMissing =>
-                    "Requires one and only one 0-point Trait".into(),
+                OriginBuildError::ZeroPointTraitMissing => "Requires one 0-point Trait".into(),
+                OriginBuildError::MultipleZeroPointTraits =>
+                    "Cannot contain multiple 0-point Traits".into(),
                 OriginBuildError::AncestryError(e) => format!("\n\t{e}"),
             }
         )
@@ -126,6 +128,12 @@ impl fmt::Display for OriginBuildError {
 }
 
 impl Error for OriginBuildError {}
+
+impl From<InstanceBuildError> for OriginBuildError {
+    fn from(value: InstanceBuildError) -> Self {
+        Self::AncestryError(value)
+    }
+}
 
 impl TryFrom<OriginBuilder> for Origin {
     type Error = OriginBuildError;
@@ -140,29 +148,33 @@ impl TryFrom<OriginBuilder> for Origin {
         if value.trait_points_remaining() {
             return Err(OriginBuildError::PointsRemaining);
         }
-        if !value.has_single_0_point_trait() {
-            return Err(OriginBuildError::ZeroPointTraitMissing);
+        match value.zero_point_trait_count() {
+            0 => {
+                return Err(OriginBuildError::ZeroPointTraitMissing);
+            }
+            count if count > 1 => {
+                return Err(OriginBuildError::MultipleZeroPointTraits);
+            }
+            _ => (),
         }
 
-        let instances: Vec<_> = value
-            .ancestries
-            .unwrap()
-            .iter()
-            .map(|b| b.clone().build().unwrap())
-            .collect();
-        dbg!(&instances);
+        let instance_builders: Vec<_> = value.ancestries.unwrap();
 
-        if instances.len() > 2 {
-            return Ok(Origin::CustomOrigin(instances));
+        let mut instances = vec![];
+        for b in instance_builders {
+            let instance = b.build()?;
+            instances.push(instance);
         }
-        if instances.len() == 2 {
-            return Ok(Origin::HybridBred(
+
+        match instances.len() {
+            0 => Err(OriginBuildError::AncestryMissing),
+            1 => Ok(Origin::PureBred(instances[0].clone())),
+            2 => Ok(Origin::HybridBred(
                 instances[0].clone(),
                 instances[1].clone(),
-            ));
+            )),
+            _ => Ok(Origin::CustomOrigin(instances)),
         }
-
-        Ok(Origin::PureBred(instances[0].clone()))
     }
 }
 
@@ -381,7 +393,7 @@ mod tests {
         }
 
         #[test]
-        fn _must_contain_one_and_only_one_zero_point_trait() {
+        fn _counts_zero_point_traits() -> Result<(), Box<dyn Error>> {
             let test_trait_0 = AncestryTrait::default();
             let test_trait_1 = AncestryTrait {
                 uuid: Uuid::new_v4(),
@@ -392,20 +404,81 @@ mod tests {
                 ..Default::default()
             };
 
-            let test_builder = OriginBuilder::new().with_ancestry(test_entry).unwrap();
-            assert!(!test_builder.has_single_0_point_trait());
+            let test_builder = OriginBuilder::new().with_ancestry(test_entry)?;
+            assert_eq!(test_builder.zero_point_trait_count(), 0);
 
-            let test_builder = test_builder.add_ancestry_trait(test_trait_0).unwrap();
-            assert!(test_builder.has_single_0_point_trait());
+            let test_builder = test_builder.add_ancestry_trait(test_trait_0)?;
+            assert_eq!(test_builder.zero_point_trait_count(), 1);
 
-            let test_builder = test_builder.add_ancestry_trait(test_trait_1).unwrap();
-            assert!(!test_builder.has_single_0_point_trait());
+            let test_builder = test_builder.add_ancestry_trait(test_trait_1)?;
+            assert_eq!(test_builder.zero_point_trait_count(), 2);
+
+            Ok(())
         }
 
         #[test]
-        #[ignore = "not yet implemented"]
-        fn _builds_correct_origin_based_on_ancestry_count() {
-            todo!()
+        fn _builds_correct_origin_based_on_ancestry_count() -> Result<(), Box<dyn Error>> {
+            let builder = OriginBuilder::new();
+            assert_eq!(
+                builder.clone().build(),
+                Err(OriginBuildError::AncestryMissing)
+            );
+
+            let t0 = AncestryTrait {
+                cost: 5,
+                ..Default::default()
+            };
+            let t0_0 = AncestryTrait {
+                cost: 0,
+                ..Default::default()
+            };
+            let e0 = AncestryEntry {
+                available_traits: vec![t0.clone(), t0_0.clone()],
+                ..AncestryEntry::default()
+            };
+
+            let builder = builder
+                .with_ancestry(e0.clone())?
+                .add_ancestry_trait(t0.clone())?
+                .add_ancestry_trait(t0_0.clone())?;
+            let result = builder.clone().build();
+            dbg!(&result);
+            assert!(matches!(result, Ok(Origin::PureBred(_))));
+
+            let t1 = AncestryTrait {
+                cost: 1,
+                ..Default::default()
+            };
+            let e1 = AncestryEntry {
+                available_traits: vec![t1.clone()],
+                ..AncestryEntry::default()
+            };
+
+            let mut builder = builder.with_ancestry(e1.clone())?.add_ancestry_trait(t1)?;
+            builder.available_points = 6;
+            let result = builder.clone().build();
+            dbg!(&result);
+            assert!(
+                matches!(result, Ok(Origin::HybridBred(_, _))),
+                "did not build HybridBred"
+            );
+
+            let t2 = AncestryTrait {
+                cost: 2,
+                ..Default::default()
+            };
+            let e2 = AncestryEntry {
+                available_traits: vec![t2.clone()],
+                ..AncestryEntry::default()
+            };
+
+            let mut builder = builder.with_ancestry(e2)?.add_ancestry_trait(t2)?;
+            builder.available_points = 8;
+            let result = builder.build();
+            dbg!(&result);
+            assert!(matches!(result, Ok(Origin::CustomOrigin(_))));
+
+            Ok(())
         }
     }
 
