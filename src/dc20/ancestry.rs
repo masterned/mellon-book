@@ -6,8 +6,28 @@ use uuid::Uuid;
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct OriginBuilder {
     pub available_points: isize,
-    pub ancestries: Option<Vec<AncestryInstanceBuilder>>,
+    pub ancestries: Option<Vec<AncestryInstance>>,
 }
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum AddAncestryError {
+    DuplicateAncestry(String),
+}
+
+impl fmt::Display for AddAncestryError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Unable to add Ancestry: {}",
+            match self {
+                AddAncestryError::DuplicateAncestry(ancestry_name) =>
+                    format!("attempting to add duplicate Ancestry \"{ancestry_name}\""),
+            }
+        )
+    }
+}
+
+impl Error for AddAncestryError {}
 
 impl OriginBuilder {
     pub fn new() -> Self {
@@ -17,53 +37,25 @@ impl OriginBuilder {
         }
     }
 
-    pub fn with_ancestry(mut self, entry: AncestryEntry) -> Result<Self, &'static str> {
-        if self.is_duplicate_entry(&entry) {
-            return Err("Adding duplicate Entry");
+    pub fn with_ancestry(mut self, ancestry: AncestryInstance) -> Result<Self, AddAncestryError> {
+        if self.duplicate_ancestry(&ancestry) {
+            return Err(AddAncestryError::DuplicateAncestry(ancestry.name));
         }
 
-        self.ancestries
-            .get_or_insert_default()
-            .push(AncestryInstanceBuilder::from(entry));
+        self.ancestries.get_or_insert_default().push(ancestry);
 
         Ok(self)
     }
 
-    /// What to do when multiple Entries have the
-    /// same Trait available? Add to first one?
-    /// Could prevent user from optimizing
-    /// Origin. Force user to specify which
-    /// Entry? Would be a pain to have to
-    /// specify every time. Attempt and Error?
-    /// Would waste more calls...
-    pub fn add_ancestry_trait(
-        mut self,
-        ancestry_trait: AncestryTrait,
-    ) -> Result<Self, &'static str> {
-        if let Some(ref mut ancestries) = self.ancestries {
-            for ancestry in ancestries.iter_mut() {
-                if let Ok(modified) = ancestry.clone().add_ancestry_trait(ancestry_trait.clone()) {
-                    *ancestry = modified;
-                    return Ok(self);
-                }
-            }
-            Err("Cannot add Trait to any available Ancestries")
-        } else {
-            Err("Must have Ancestry to add Trait")
-        }
-    }
-
-    fn is_duplicate_entry(&self, entry: &AncestryEntry) -> bool {
+    fn duplicate_ancestry(&self, ancestry: &AncestryInstance) -> bool {
         self.ancestries
             .as_ref()
-            .is_some_and(|es| es.iter().filter(|a| a.entry == *entry).count() >= 1)
+            .is_some_and(|a_s| a_s.contains(ancestry))
     }
 
     fn total_trait_points(&self) -> isize {
         self.ancestries.as_ref().map_or(0, |a_s| {
-            a_s.iter()
-                .map(AncestryInstanceBuilder::total_trait_points)
-                .sum()
+            a_s.iter().map(AncestryInstance::total_trait_points).sum()
         })
     }
 
@@ -106,7 +98,6 @@ pub enum OriginBuildError {
     PointsRemaining,
     ZeroPointTraitMissing,
     MultipleZeroPointTraits,
-    AncestryError(InstanceBuildError),
 }
 
 impl fmt::Display for OriginBuildError {
@@ -121,19 +112,12 @@ impl fmt::Display for OriginBuildError {
                 OriginBuildError::ZeroPointTraitMissing => "Requires one 0-point Trait".into(),
                 OriginBuildError::MultipleZeroPointTraits =>
                     "Cannot contain multiple 0-point Traits".into(),
-                OriginBuildError::AncestryError(e) => format!("\n\t{e}"),
             }
         )
     }
 }
 
 impl Error for OriginBuildError {}
-
-impl From<InstanceBuildError> for OriginBuildError {
-    fn from(value: InstanceBuildError) -> Self {
-        Self::AncestryError(value)
-    }
-}
 
 impl TryFrom<OriginBuilder> for Origin {
     type Error = OriginBuildError;
@@ -158,22 +142,15 @@ impl TryFrom<OriginBuilder> for Origin {
             _ => (),
         }
 
-        let instance_builders: Vec<_> = value.ancestries.unwrap();
-
-        let mut instances = vec![];
-        for b in instance_builders {
-            let instance = b.build()?;
-            instances.push(instance);
-        }
-
-        match instances.len() {
+        let ancestries = value.ancestries.unwrap();
+        match ancestries.iter().count() {
             0 => Err(OriginBuildError::AncestryMissing),
-            1 => Ok(Origin::PureBred(instances[0].clone())),
+            1 => Ok(Origin::PureBred(ancestries[0].clone())),
             2 => Ok(Origin::HybridBred(
-                instances[0].clone(),
-                instances[1].clone(),
+                ancestries[0].clone(),
+                ancestries[1].clone(),
             )),
-            _ => Ok(Origin::CustomOrigin(instances)),
+            _ => Ok(Origin::CustomOrigin(ancestries)),
         }
     }
 }
@@ -192,6 +169,29 @@ pub struct AncestryEntry {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum AddAncestryTraitError {
+    TraitNotAvailable(String),
+    DuplicateTrait(String),
+}
+
+impl fmt::Display for AddAncestryTraitError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Unable to build AncestryInstance: {}",
+            match self {
+                AddAncestryTraitError::TraitNotAvailable(trait_name) =>
+                    format!("Trait `{trait_name}` not available in Entry"),
+                AddAncestryTraitError::DuplicateTrait(trait_name) =>
+                    format!("Attempting to duplicate `{trait_name}` Trait"),
+            }
+        )
+    }
+}
+
+impl Error for AddAncestryTraitError {}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct AncestryInstanceBuilder {
     pub entry: AncestryEntry,
     pub selected_traits: Option<Vec<AncestryTrait>>,
@@ -201,13 +201,15 @@ impl AncestryInstanceBuilder {
     pub fn add_ancestry_trait(
         mut self,
         ancestry_trait: AncestryTrait,
-    ) -> Result<Self, &'static str> {
+    ) -> Result<Self, AddAncestryTraitError> {
         if !self.trait_available(&ancestry_trait) {
-            return Err("Trait not available for the given Ancestry");
+            return Err(AddAncestryTraitError::TraitNotAvailable(
+                ancestry_trait.name,
+            ));
         }
 
         if self.duplicate_trait(&ancestry_trait) {
-            return Err("Attempting to add duplicate Trait");
+            return Err(AddAncestryTraitError::DuplicateTrait(ancestry_trait.name));
         }
 
         self.selected_traits
@@ -215,12 +217,6 @@ impl AncestryInstanceBuilder {
             .push(ancestry_trait);
 
         Ok(self)
-    }
-
-    fn total_trait_points(&self) -> isize {
-        self.selected_traits
-            .as_ref()
-            .map_or(0, |ts| ts.iter().map(|t| t.cost).sum())
     }
 
     fn trait_available(&self, ancestry_trait: &AncestryTrait) -> bool {
@@ -231,13 +227,6 @@ impl AncestryInstanceBuilder {
         self.selected_traits
             .as_ref()
             .is_some_and(|t| t.contains(&ancestry_trait))
-    }
-
-    fn zero_point_traits(&self) -> Vec<&AncestryTrait> {
-        self.selected_traits
-            .as_ref()
-            .map(|ts| ts.iter().filter(|t| t.cost == 0).collect())
-            .unwrap_or(vec![])
     }
 
     pub fn build(self) -> Result<AncestryInstance, InstanceBuildError> {
@@ -262,7 +251,7 @@ impl From<AncestryEntry> for AncestryInstanceBuilder {
 /// keep the AncestryTraits separated. I don't
 /// want to lose track of which Ancestry a given
 /// AncestryTrait belongs to.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct AncestryInstance {
     pub uuid: Uuid,
     pub name: String,
@@ -270,14 +259,30 @@ pub struct AncestryInstance {
 }
 
 impl AncestryInstance {
-    /// I really need to remove this method so
-    /// that I force myself to use the Builder.
-    pub fn new(name: impl Into<String>) -> Self {
-        AncestryInstance {
-            uuid: Uuid::new_v4(),
-            name: name.into(),
-            traits: vec![],
-        }
+    pub fn with_trait(
+        mut self,
+        ancestry_trait: AncestryTrait,
+    ) -> Result<Self, AddAncestryTraitError> {
+        self.add_ancestry_trait(ancestry_trait)?;
+
+        Ok(self)
+    }
+
+    pub fn add_ancestry_trait(
+        &mut self,
+        ancestry_trait: AncestryTrait,
+    ) -> Result<(), AddAncestryTraitError> {
+        self.traits.push(ancestry_trait);
+
+        Ok(())
+    }
+
+    fn total_trait_points(&self) -> isize {
+        self.traits.iter().map(|t| t.cost).sum()
+    }
+
+    fn zero_point_traits(&self) -> Vec<&AncestryTrait> {
+        self.traits.iter().filter(|t| t.cost == 0).collect()
     }
 }
 
@@ -332,64 +337,71 @@ mod tests {
         use super::*;
 
         #[test]
+        #[ignore = "not yet implemented"]
         fn _cannot_have_multiple_ancestries_of_same_entry() {
-            let test_entry = AncestryEntry::default();
+            todo!()
+        }
+
+        #[test]
+        fn _cannot_have_duplicate_ancestry() {
+            let test_ancestry = AncestryInstance::default();
 
             let test_builder = OriginBuilder::new();
-            assert!(!test_builder.is_duplicate_entry(&test_entry));
+            assert!(!test_builder.duplicate_ancestry(&test_ancestry));
 
             let test_builder = OriginBuilder::new()
-                .with_ancestry(test_entry.clone())
+                .with_ancestry(test_ancestry.clone())
                 .unwrap();
-            assert!(test_builder.is_duplicate_entry(&test_entry));
+            assert!(test_builder.duplicate_ancestry(&test_ancestry));
 
             assert_eq!(
                 OriginBuilder::new()
-                    .with_ancestry(test_entry.clone())
+                    .with_ancestry(test_ancestry.clone())
                     .unwrap()
-                    .with_ancestry(test_entry),
-                Err("Adding duplicate Entry")
+                    .with_ancestry(test_ancestry),
+                Err(AddAncestryError::DuplicateAncestry("".into()))
             )
         }
 
         #[test]
-        fn _cannot_exceed_available_points() {
+        fn _cannot_exceed_available_points() -> Result<(), Box<dyn Error>> {
             let test_trait = AncestryTrait {
                 cost: 6,
                 ..AncestryTrait::default()
             };
-            let test_entry = AncestryEntry {
-                available_traits: vec![test_trait.clone()],
-                ..AncestryEntry::default()
-            };
+            let test_ancestry = AncestryInstance::default();
 
-            let test_builder = OriginBuilder::new().with_ancestry(test_entry).unwrap();
+            let mut test_builder = OriginBuilder::new().with_ancestry(test_ancestry).unwrap();
 
             assert!(!test_builder.trait_points_exceeded());
 
-            let test_builder = test_builder.add_ancestry_trait(test_trait).unwrap();
+            test_builder.ancestries.as_mut().unwrap()[0].add_ancestry_trait(test_trait)?;
 
             assert!(test_builder.trait_points_exceeded());
+
+            Ok(())
         }
 
         #[test]
-        fn _must_use_all_available_points() {
+        fn _must_use_all_available_points() -> Result<(), Box<dyn Error>> {
             let test_trait = AncestryTrait {
                 cost: 5,
                 ..AncestryTrait::default()
             };
-            let test_entry = AncestryEntry {
-                available_traits: vec![test_trait.clone()],
-                ..AncestryEntry::default()
+            let test_ancestry = AncestryInstance {
+                traits: vec![],
+                ..Default::default()
             };
 
-            let test_builder = OriginBuilder::new().with_ancestry(test_entry).unwrap();
+            let mut test_builder = OriginBuilder::new().with_ancestry(test_ancestry).unwrap();
 
             assert!(test_builder.trait_points_remaining());
 
-            let test_builder = test_builder.add_ancestry_trait(test_trait).unwrap();
+            test_builder.ancestries.as_mut().unwrap()[0].add_ancestry_trait(test_trait)?;
 
             assert!(!test_builder.trait_points_remaining());
+
+            Ok(())
         }
 
         #[test]
@@ -399,18 +411,15 @@ mod tests {
                 uuid: Uuid::new_v4(),
                 ..Default::default()
             };
-            let test_entry = AncestryEntry {
-                available_traits: vec![test_trait_0.clone(), test_trait_1.clone()],
-                ..Default::default()
-            };
+            let test_ancestry = AncestryInstance::default();
 
-            let test_builder = OriginBuilder::new().with_ancestry(test_entry)?;
+            let mut test_builder = OriginBuilder::new().with_ancestry(test_ancestry)?;
             assert_eq!(test_builder.zero_point_trait_count(), 0);
 
-            let test_builder = test_builder.add_ancestry_trait(test_trait_0)?;
+            test_builder.ancestries.as_mut().unwrap()[0].add_ancestry_trait(test_trait_0)?;
             assert_eq!(test_builder.zero_point_trait_count(), 1);
 
-            let test_builder = test_builder.add_ancestry_trait(test_trait_1)?;
+            test_builder.ancestries.as_mut().unwrap()[0].add_ancestry_trait(test_trait_1)?;
             assert_eq!(test_builder.zero_point_trait_count(), 2);
 
             Ok(())
@@ -432,15 +441,12 @@ mod tests {
                 cost: 0,
                 ..Default::default()
             };
-            let e0 = AncestryEntry {
-                available_traits: vec![t0.clone(), t0_0.clone()],
-                ..AncestryEntry::default()
+            let a0 = AncestryInstance {
+                traits: vec![t0.clone(), t0_0.clone()],
+                ..Default::default()
             };
 
-            let builder = builder
-                .with_ancestry(e0.clone())?
-                .add_ancestry_trait(t0.clone())?
-                .add_ancestry_trait(t0_0.clone())?;
+            let builder = builder.with_ancestry(a0.clone())?;
             let result = builder.clone().build();
             dbg!(&result);
             assert!(matches!(result, Ok(Origin::PureBred(_))));
@@ -449,30 +455,27 @@ mod tests {
                 cost: 1,
                 ..Default::default()
             };
-            let e1 = AncestryEntry {
-                available_traits: vec![t1.clone()],
-                ..AncestryEntry::default()
+            let a1 = AncestryInstance {
+                traits: vec![t1.clone()],
+                ..Default::default()
             };
 
-            let mut builder = builder.with_ancestry(e1.clone())?.add_ancestry_trait(t1)?;
+            let mut builder = builder.with_ancestry(a1.clone())?;
             builder.available_points = 6;
             let result = builder.clone().build();
             dbg!(&result);
-            assert!(
-                matches!(result, Ok(Origin::HybridBred(_, _))),
-                "did not build HybridBred"
-            );
+            assert!(matches!(result, Ok(Origin::HybridBred(_, _))));
 
             let t2 = AncestryTrait {
                 cost: 2,
                 ..Default::default()
             };
-            let e2 = AncestryEntry {
-                available_traits: vec![t2.clone()],
-                ..AncestryEntry::default()
+            let a2 = AncestryInstance {
+                traits: vec![t2.clone()],
+                ..Default::default()
             };
 
-            let mut builder = builder.with_ancestry(e2)?.add_ancestry_trait(t2)?;
+            let mut builder = builder.with_ancestry(a2)?;
             builder.available_points = 8;
             let result = builder.build();
             dbg!(&result);

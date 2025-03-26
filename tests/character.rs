@@ -1,15 +1,34 @@
 use std::error::Error;
 
-use mellon_book::dc20::{background, AncestryInstance, AttributesBuilder, LanguageFluency, Origin};
+use mellon_book::dc20::{
+    background, AncestryEntry, AncestryInstanceBuilder, AncestryTrait, AttributesBuilder,
+    LanguageFluency, Origin,
+};
 use mellon_book::dc20::{Attribute, CharacterBuilder, Class, Defense, Skill};
+use uuid::Uuid;
 
 #[test]
 fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
+    let unkillable = AncestryTrait {
+        uuid: Uuid::new_v4(),
+        name: "Unkillable".into(),
+        cost: 0,
+        description: "Gives advantage on death saves".into(),
+    };
+    let human = AncestryInstanceBuilder::from(AncestryEntry {
+        uuid: Uuid::new_v4(),
+        name: "Human".into(),
+        description: "Versatile but milktoast".into(),
+        available_traits: vec![unkillable.clone()],
+    })
+    .add_ancestry_trait(unkillable)?
+    .build()?;
+
     let test_character = CharacterBuilder::new()
         .player_name("Test Player")
         .character_name("Test Name")
         .class(Class::new("Warrior"))
-        .origin(Origin::PureBred(AncestryInstance::new("Human")))
+        .origin(Origin::PureBred(human))
         .background(
             background::Builder::new("Soldier")
                 .add_skill(Skill::new("Athletics"))

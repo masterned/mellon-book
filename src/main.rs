@@ -1,16 +1,44 @@
 use std::error::Error;
 
 use mellon_book::dc20::*;
+use uuid::Uuid;
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let unkillable = AncestryTrait {
+        uuid: Uuid::new_v4(),
+        name: "Unkillable".into(),
+        cost: 0,
+        description: "Gives advantage on death saves".into(),
+    };
+    let human = AncestryInstanceBuilder::from(AncestryEntry {
+        uuid: Uuid::new_v4(),
+        name: "Human".into(),
+        description: "Versatile but milktoast".into(),
+        available_traits: vec![unkillable.clone()],
+    })
+    .add_ancestry_trait(unkillable)?
+    .build()?;
+
+    let psy_trait = AncestryTrait {
+        uuid: Uuid::new_v4(),
+        cost: 5,
+        ..Default::default()
+    };
+
+    let psyborn = AncestryInstanceBuilder::from(AncestryEntry {
+        uuid: Uuid::new_v4(),
+        name: "Psyborn".into(),
+        description: "Totally not a mindflayer... promise...".into(),
+        available_traits: vec![psy_trait.clone()],
+    })
+    .add_ancestry_trait(psy_trait)?
+    .build()?;
+
     let character = CharacterBuilder::default()
         .player_name("Spencer")
         .character_name("Cygnus")
         .class(Class::new("Sorcerer"))
-        .origin(Origin::HybridBred(
-            AncestryInstance::new("Human"),
-            AncestryInstance::new("Psyborn"),
-        ))
+        .origin(Origin::HybridBred(human, psyborn))
         .background(
             background::Builder::new("Bounty Hunter")
                 .add_trade(Skill::new("Engineering").with_mastery(Mastery::Novice))

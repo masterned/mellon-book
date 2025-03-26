@@ -300,7 +300,10 @@ mod tests {
             ]))
         );
 
-        let human = Origin::PureBred(AncestryInstance::new("Human"));
+        let human = Origin::PureBred(AncestryInstance {
+            name: "Human".into(),
+            ..Default::default()
+        });
 
         let result = CharacterBuilder::new()
             .player_name("John Doe")
