@@ -38,8 +38,8 @@ impl OriginBuilder {
     }
 
     pub fn with_ancestry(mut self, ancestry: AncestryInstance) -> Result<Self, AddAncestryError> {
-        if self.duplicate_ancestry(&ancestry) {
-            return Err(AddAncestryError::DuplicateAncestry(ancestry.name));
+        if self.duplicate_ancestry(&ancestry) || self.duplicate_ancestry_entry(&ancestry) {
+            return Err(AddAncestryError::DuplicateAncestry(ancestry.entry.name));
         }
 
         self.ancestries.get_or_insert_default().push(ancestry);
@@ -51,6 +51,12 @@ impl OriginBuilder {
         self.ancestries
             .as_ref()
             .is_some_and(|a_s| a_s.contains(ancestry))
+    }
+
+    fn duplicate_ancestry_entry(&self, ancestry: &AncestryInstance) -> bool {
+        self.ancestries
+            .as_ref()
+            .is_some_and(|a_s| a_s.iter().any(|a| a.entry == ancestry.entry))
     }
 
     fn total_trait_points(&self) -> isize {
@@ -256,6 +262,7 @@ pub struct AncestryInstance {
     pub uuid: Uuid,
     pub name: String,
     pub traits: Vec<AncestryTrait>,
+    pub entry: AncestryEntry,
 }
 
 impl AncestryInstance {
@@ -312,6 +319,7 @@ impl TryFrom<AncestryInstanceBuilder> for AncestryInstance {
         if let Some(selected_traits) = value.selected_traits.clone() {
             Ok(AncestryInstance {
                 uuid: Uuid::new_v4(),
+                entry: value.entry.clone(),
                 name: value.entry.name,
                 traits: selected_traits,
             })
@@ -337,9 +345,35 @@ mod tests {
         use super::*;
 
         #[test]
-        #[ignore = "not yet implemented"]
-        fn _cannot_have_multiple_ancestries_of_same_entry() {
-            todo!()
+        fn _cannot_have_multiple_ancestries_of_same_entry() -> Result<(), Box<dyn Error>> {
+            let e0 = AncestryEntry {
+                uuid: Uuid::new_v4(),
+                ..Default::default()
+            };
+
+            let o0 = OriginBuilder::new().with_ancestry(AncestryInstance {
+                entry: e0.clone(),
+                traits: vec![
+                    AncestryTrait {
+                        cost: 0,
+                        ..Default::default()
+                    },
+                    AncestryTrait {
+                        cost: 5,
+                        ..Default::default()
+                    },
+                ],
+                ..Default::default()
+            })?;
+
+            let o0 = o0.with_ancestry(AncestryInstance {
+                entry: e0,
+                ..Default::default()
+            });
+
+            assert_eq!(o0, Err(AddAncestryError::DuplicateAncestry("".into())));
+
+            Ok(())
         }
 
         #[test]
@@ -443,6 +477,10 @@ mod tests {
             };
             let a0 = AncestryInstance {
                 traits: vec![t0.clone(), t0_0.clone()],
+                entry: AncestryEntry {
+                    uuid: Uuid::new_v4(),
+                    ..Default::default()
+                },
                 ..Default::default()
             };
 
@@ -457,6 +495,10 @@ mod tests {
             };
             let a1 = AncestryInstance {
                 traits: vec![t1.clone()],
+                entry: AncestryEntry {
+                    uuid: Uuid::new_v4(),
+                    ..Default::default()
+                },
                 ..Default::default()
             };
 
@@ -472,6 +514,10 @@ mod tests {
             };
             let a2 = AncestryInstance {
                 traits: vec![t2.clone()],
+                entry: AncestryEntry {
+                    uuid: Uuid::new_v4(),
+                    ..Default::default()
+                },
                 ..Default::default()
             };
 
