@@ -37,7 +37,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     let character = CharacterBuilder::default()
         .player_name("Spencer")
         .character_name("Cygnus")
-        .class(Class::new("Sorcerer"))
+        .class(ClassEntry {
+            combat_style: vec![CombatStyle::default_spellcasting()],
+            available_subclasses: vec![
+                SubclassEntry::new("Angelic"),
+                SubclassEntry::new("Draconic"),
+                SubclassEntry::new("Paragon"),
+            ],
+            ..ClassEntry::new("Sorcerer")
+        })
         .origin(Origin::HybridBred(human, psyborn))
         .background(
             background::Builder::new("Bounty Hunter")

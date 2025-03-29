@@ -4,13 +4,13 @@ use uuid::Uuid;
 
 use crate::utils::{FieldAggregator, SwapResult};
 
-use super::{Attributes, Background, Class, Origin};
+use super::{Attributes, Background, ClassEntry, Origin};
 
 #[derive(Clone, Debug, Default)]
 pub struct CharacterBuilder {
     pub player_name: Option<String>,
     pub character_name: Option<String>,
-    pub class: Option<Class>,
+    pub class: Option<ClassEntry>,
     pub ancestry: Option<Origin>,
     pub background: Option<Background>,
     pub level: Level,
@@ -48,7 +48,7 @@ impl CharacterBuilder {
     }
 
     #[must_use]
-    pub fn class(mut self, class: Class) -> Self {
+    pub fn class(mut self, class: ClassEntry) -> Self {
         let _ = self.class.insert(class);
 
         self
@@ -99,7 +99,7 @@ pub struct Character {
     id: Uuid,
     player_name: String,
     character_name: String,
-    class: Class,
+    class: ClassEntry,
     ancestry: Origin,
     background: Background,
     level: Level,
@@ -125,7 +125,7 @@ impl Character {
     }
 
     #[must_use]
-    pub fn class(&self) -> &Class {
+    pub fn class(&self) -> &ClassEntry {
         &self.class
     }
 
@@ -321,7 +321,7 @@ mod tests {
             ]))
         );
 
-        let champion = Class::new("Champion");
+        let champion = ClassEntry::new("Champion");
 
         let soldier = background::Builder::new("Soldier")
             .add_skill(Skill::new("Athletics"))

@@ -4,7 +4,7 @@ use mellon_book::dc20::{
     background, AncestryEntry, AncestryInstanceBuilder, AncestryTrait, AttributesBuilder,
     LanguageFluency, Origin,
 };
-use mellon_book::dc20::{Attribute, CharacterBuilder, Class, Defense, Skill};
+use mellon_book::dc20::{Attribute, CharacterBuilder, ClassEntry, Defense, Skill};
 use uuid::Uuid;
 
 #[test]
@@ -27,7 +27,7 @@ fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
     let test_character = CharacterBuilder::new()
         .player_name("Test Player")
         .character_name("Test Name")
-        .class(Class::new("Warrior"))
+        .class(ClassEntry::new("Champion"))
         .origin(Origin::PureBred(human))
         .background(
             background::Builder::new("Soldier")
