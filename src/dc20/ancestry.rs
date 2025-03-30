@@ -149,7 +149,7 @@ impl TryFrom<OriginBuilder> for Origin {
         }
 
         let ancestries = value.ancestries.unwrap();
-        match ancestries.iter().count() {
+        match ancestries.len() {
             0 => Err(OriginBuildError::AncestryMissing),
             1 => Ok(Origin::PureBred(ancestries[0].clone())),
             2 => Ok(Origin::HybridBred(
@@ -226,13 +226,13 @@ impl AncestryInstanceBuilder {
     }
 
     fn trait_available(&self, ancestry_trait: &AncestryTrait) -> bool {
-        self.entry.available_traits.contains(&ancestry_trait)
+        self.entry.available_traits.contains(ancestry_trait)
     }
 
     fn duplicate_trait(&self, ancestry_trait: &AncestryTrait) -> bool {
         self.selected_traits
             .as_ref()
-            .is_some_and(|t| t.contains(&ancestry_trait))
+            .is_some_and(|t| t.contains(ancestry_trait))
     }
 
     pub fn build(self) -> Result<AncestryInstance, InstanceBuildError> {
