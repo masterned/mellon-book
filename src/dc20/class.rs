@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-use super::Level;
+use super::{Level, SpellList};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ClassTableColumn(pub [usize; 10]);
@@ -26,7 +26,7 @@ pub enum CombatStyle {
         techniques_known: Box<ClassTableColumn>,
     },
     Spellcasting {
-        spell_list: Vec<Spell>,
+        available_spell_lists: Vec<SpellList>,
         mana_points: Box<ClassTableColumn>,
         cantrips_known: Box<ClassTableColumn>,
         spells_known: Box<ClassTableColumn>,
@@ -45,28 +45,12 @@ impl CombatStyle {
 
     pub fn default_spellcasting() -> Self {
         Self::Spellcasting {
-            spell_list: Default::default(),
+            available_spell_lists: Default::default(),
             mana_points: Box::new([6, 0, 2, 0, 2, 2, 0, 2, 2, 0].into()),
             cantrips_known: Box::new([2, 0, 0, 0, 1, 0, 0, 1, 0, 0].into()),
             spells_known: Box::new([3, 0, 1, 0, 0, 1, 0, 0, 1, 0].into()),
         }
     }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum SpellFamily {
-    Conjuration,
-    Divination,
-    Enchantment,
-    Illusion,
-    Restoration,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Spell {
-    pub uuid: Uuid,
-    pub name: String,
-    pub family: SpellFamily,
 }
 
 #[derive(Clone, Debug, PartialEq)]
