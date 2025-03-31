@@ -4,7 +4,9 @@ pub mod background;
 pub mod character;
 pub mod class;
 pub mod language;
+pub mod maneuver;
 pub mod spell;
+pub mod technique;
 
 pub use ancestry::*;
 pub use attribute::*;
@@ -12,4 +14,6 @@ pub use background::*;
 pub use character::*;
 pub use class::*;
 pub use language::*;
+pub use maneuver::*;
 pub use spell::*;
+pub use technique::*;

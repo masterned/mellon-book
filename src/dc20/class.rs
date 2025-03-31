@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-use super::{Level, SpellList};
+use super::{Level, Maneuver, SpellList};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ClassTableColumn(pub [usize; 10]);
@@ -51,20 +51,6 @@ impl CombatStyle {
             spells_known: Box::new([3, 0, 1, 0, 0, 1, 0, 0, 1, 0].into()),
         }
     }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Maneuver {
-    pub uuid: Uuid,
-    pub name: String,
-    pub description: String,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct Technique {
-    pub uuid: Uuid,
-    pub name: String,
-    pub description: String,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
