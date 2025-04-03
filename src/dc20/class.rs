@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-use super::{Level, Maneuver, SpellList};
+use super::{Item, Level, Maneuver, SpellList};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ClassTableColumn(pub [usize; 10]);
@@ -62,12 +62,6 @@ pub struct ClassFeature {
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Talent {
-    pub uuid: Uuid,
-    pub name: String,
-}
-
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct Item {
     pub uuid: Uuid,
     pub name: String,
 }
