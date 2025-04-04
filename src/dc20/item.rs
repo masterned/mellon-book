@@ -43,6 +43,18 @@ impl WeaponStyle {
     pub fn compatible_with_type(self, weapon_type: WeaponType) -> bool {
         weapon_type.compatible_with_style(self)
     }
+
+    pub fn default_damage_type(self) -> DamageType {
+        match self {
+            WeaponStyle::Axe | WeaponStyle::Sword | WeaponStyle::Whip => DamageType::Slashing,
+            WeaponStyle::Bow | WeaponStyle::Crossbow | WeaponStyle::Pick | WeaponStyle::Spear => {
+                DamageType::Piercing
+            }
+            WeaponStyle::Chained | WeaponStyle::Fist | WeaponStyle::Hammer | WeaponStyle::Staff => {
+                DamageType::Bludgeoning
+            }
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -183,6 +195,11 @@ impl WeaponBuilder {
                 return Err(WeaponBuildError::IncompatibleStyle(style, weapon_type));
             }
         }
+
+        if self.damage_type.is_none() {
+            let _ = self.damage_type.insert(style.default_damage_type());
+        }
+
         let _ = self.style.insert(style);
 
         Ok(())
@@ -192,6 +209,16 @@ impl WeaponBuilder {
         self.style(style)?;
 
         Ok(self)
+    }
+
+    pub fn damage_type(&mut self, damage_type: DamageType) {
+        let _ = self.damage_type.insert(damage_type);
+    }
+
+    pub fn with_damage_type(mut self, damage_type: DamageType) -> Self {
+        self.damage_type(damage_type);
+
+        self
     }
 
     pub fn add_property(&mut self, property: WeaponProperty) -> Result<(), WeaponBuildError> {
@@ -233,8 +260,13 @@ impl WeaponBuilder {
 
         Ok(self)
     }
+
+    pub fn build(self) -> Result<Weapon, WeaponBuildError> {
+        self.try_into()
+    }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Weapon {
     pub uuid: Uuid,
     pub weapon_type: WeaponType,
@@ -316,15 +348,86 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
     fn _ranged_weapons_start_with_ammo_two_handed_and_unwieldy_properties() {
-        todo!()
+        let ranged_weapon_builder = WeaponBuilder::new_ranged();
+
+        assert_eq!(
+            ranged_weapon_builder.properties,
+            vec![
+                WeaponProperty::Ammo,
+                WeaponProperty::TwoHanded,
+                WeaponProperty::Unwieldy
+            ]
+            .into()
+        );
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
-    fn _enforces_all_required_fields_to_build_weapon() {
-        todo!()
+    fn _default_damage_type_based_on_style() {
+        let sword = WeaponBuilder::new_melee()
+            .with_style(WeaponStyle::Sword)
+            .unwrap();
+
+        assert_eq!(sword.damage_type, Some(DamageType::Slashing));
+
+        let hammer = WeaponBuilder::new_melee()
+            .with_style(WeaponStyle::Hammer)
+            .unwrap();
+
+        assert_eq!(hammer.damage_type, Some(DamageType::Bludgeoning));
+
+        let pick = WeaponBuilder::new_melee()
+            .with_style(WeaponStyle::Pick)
+            .unwrap();
+
+        assert_eq!(pick.damage_type, Some(DamageType::Piercing));
+    }
+
+    #[test]
+    fn _do_not_override_damage_type_with_default_if_damage_type_already_set(
+    ) -> Result<(), Box<dyn Error>> {
+        let builder = WeaponBuilder::new_melee().with_damage_type(DamageType::Bludgeoning);
+        let sword = builder.with_style(WeaponStyle::Sword)?;
+
+        assert_eq!(sword.damage_type, Some(DamageType::Bludgeoning));
+
+        Ok(())
+    }
+
+    #[test]
+    #[ignore]
+    fn _enforces_all_required_fields_to_build_weapon() -> Result<(), Box<dyn Error>> {
+        let builder = WeaponBuilder::new();
+
+        assert_eq!(
+            builder.clone().build(),
+            Err(WeaponBuildError::MissingField(vec![
+                "weapon_type".into(),
+                "style".into(),
+                "damage_type".into(),
+                "properties".into()
+            ]))
+        );
+
+        let builder = builder.with_melee();
+
+        assert_eq!(
+            builder.clone().build(),
+            Err(WeaponBuildError::MissingField(vec![
+                "style".into(),
+                "damage_type".into(),
+                "properties".into()
+            ]))
+        );
+
+        let builder = builder.with_style(WeaponStyle::Sword)?;
+
+        assert_eq!(
+            builder.clone().build(),
+            Err(WeaponBuildError::MissingField(vec!["properties".into()]))
+        );
+
+        Ok(())
     }
 
     #[test]
