@@ -178,29 +178,38 @@ impl WeaponBuilder {
         }
     }
 
-    pub fn weapon_type(&mut self, weapon_type: WeaponType) {
+    pub fn weapon_type(&mut self, weapon_type: WeaponType) -> Result<(), WeaponBuildError> {
+        if let Some(style) = self.style {
+            if !style.compatible_with_type(weapon_type) {
+                return Err(WeaponBuildError::IncompatibleStyle(style, weapon_type));
+            }
+        }
+
         let _ = self.weapon_type.insert(weapon_type);
+
+        Ok(())
     }
 
-    pub fn with_melee(mut self) -> Self {
-        self.weapon_type(WeaponType::Melee);
+    pub fn with_melee(mut self) -> Result<Self, WeaponBuildError> {
+        self.weapon_type(WeaponType::Melee)?;
 
-        self
+        Ok(self)
     }
 
     pub fn new_melee() -> Self {
-        Self::new().with_melee()
+        Self::new().with_melee().unwrap()
     }
 
-    pub fn with_ranged(mut self) -> Self {
-        self.weapon_type(WeaponType::Ranged);
+    pub fn with_ranged(mut self) -> Result<Self, WeaponBuildError> {
+        self.weapon_type(WeaponType::Ranged)?;
 
-        self
+        Ok(self)
     }
 
     pub fn new_ranged() -> Self {
         Self::new()
             .with_ranged()
+            .unwrap()
             .with_properties(&[
                 WeaponProperty::Ammo,
                 WeaponProperty::TwoHanded,
@@ -293,7 +302,27 @@ impl WeaponBuilder {
     }
 
     pub fn build(self) -> Result<Weapon, WeaponBuildError> {
-        self.try_into()
+        let mut fa = FieldAggregator::new();
+
+        fa.field_check(&self.weapon_type, "weapon_type");
+        fa.field_check(&self.style, "style");
+        fa.field_check(&self.damage_type, "damage_type");
+
+        WeaponBuildError::try_from(fa).swap()?;
+
+        let weapon_type = self.weapon_type.unwrap();
+        let style = self.style.unwrap();
+
+        weapon_type
+            .compatible_with_style(style)
+            .then_some(Weapon {
+                uuid: Uuid::new_v4(),
+                weapon_type,
+                style,
+                damage_type: self.damage_type.unwrap(),
+                properties: self.properties.unwrap_or_default(),
+            })
+            .ok_or(WeaponBuildError::IncompatibleStyle(style, weapon_type))
     }
 }
 
@@ -310,28 +339,7 @@ impl TryFrom<WeaponBuilder> for Weapon {
     type Error = WeaponBuildError;
 
     fn try_from(value: WeaponBuilder) -> Result<Self, Self::Error> {
-        let mut fa = FieldAggregator::new();
-
-        fa.field_check(&value.weapon_type, "weapon_type");
-        fa.field_check(&value.style, "style");
-        fa.field_check(&value.damage_type, "damage_type");
-
-        WeaponBuildError::try_from(fa).swap()?;
-
-        let weapon_type = value.weapon_type.unwrap();
-        let style = value.style.unwrap();
-
-        if !weapon_type.compatible_with_style(style) {
-            Err(WeaponBuildError::IncompatibleStyle(style, weapon_type))
-        } else {
-            Ok(Weapon {
-                uuid: Uuid::new_v4(),
-                weapon_type,
-                style,
-                damage_type: value.damage_type.unwrap(),
-                properties: value.properties.unwrap_or_default(),
-            })
-        }
+        value.build()
     }
 }
 
@@ -340,9 +348,22 @@ mod tests {
     use super::*;
 
     #[test]
-    fn _weapon_type_and_style_must_be_compatible() {
+    fn _weapon_type_and_style_must_be_compatible() -> Result<(), Box<dyn Error>> {
         assert!(WeaponType::Melee.compatible_with_style(WeaponStyle::Axe));
         assert!(!WeaponType::Ranged.compatible_with_style(WeaponStyle::Axe));
+
+        let mut builder = WeaponBuilder::new().with_style(WeaponStyle::Bow)?;
+        builder.weapon_type = Some(WeaponType::Melee);
+
+        assert_eq!(
+            builder.build(),
+            Err(WeaponBuildError::IncompatibleStyle(
+                WeaponStyle::Bow,
+                WeaponType::Melee
+            ))
+        );
+
+        Ok(())
     }
 
     #[test]
@@ -441,7 +462,7 @@ mod tests {
             ]))
         );
 
-        let builder = builder.with_melee();
+        let builder = builder.with_melee()?;
 
         assert_eq!(
             builder.clone().build(),
