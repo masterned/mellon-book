@@ -181,11 +181,11 @@ impl WeaponBuilder {
     pub fn new_ranged() -> Self {
         Self::new()
             .with_ranged()
-            .with_property(WeaponProperty::Ammo)
-            .unwrap()
-            .with_property(WeaponProperty::TwoHanded)
-            .unwrap()
-            .with_property(WeaponProperty::Unwieldy)
+            .with_properties(&[
+                WeaponProperty::Ammo,
+                WeaponProperty::TwoHanded,
+                WeaponProperty::Unwieldy,
+            ])
             .unwrap()
     }
 
@@ -237,6 +237,17 @@ impl WeaponBuilder {
 
     pub fn with_property(mut self, property: WeaponProperty) -> Result<Self, WeaponBuildError> {
         self.add_property(property)?;
+
+        Ok(self)
+    }
+
+    pub fn with_properties(
+        mut self,
+        properties: &[WeaponProperty],
+    ) -> Result<Self, WeaponBuildError> {
+        for &property in properties {
+            self.add_property(property)?;
+        }
 
         Ok(self)
     }
