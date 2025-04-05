@@ -3,6 +3,8 @@ use std::error::Error;
 
 use uuid::Uuid;
 
+use crate::utils::{FieldAggregator, SwapResult};
+
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Item {
     pub uuid: Uuid,
@@ -140,6 +142,24 @@ impl fmt::Display for WeaponBuildError {
 }
 
 impl Error for WeaponBuildError {}
+
+impl TryFrom<FieldAggregator> for WeaponBuildError {
+    type Error = ();
+
+    fn try_from(value: FieldAggregator) -> Result<Self, ()> {
+        value
+            .0
+            .map(|fields: Vec<&'static str>| {
+                WeaponBuildError::MissingField(
+                    fields
+                        .iter()
+                        .map(|field| field.parse().expect("I have no clue how you got here..."))
+                        .collect(),
+                )
+            })
+            .ok_or(())
+    }
+}
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct WeaponBuilder {
@@ -290,24 +310,27 @@ impl TryFrom<WeaponBuilder> for Weapon {
     type Error = WeaponBuildError;
 
     fn try_from(value: WeaponBuilder) -> Result<Self, Self::Error> {
-        if let Some(weapon_type) = value.weapon_type {
-            if let Some(style) = value.style {
-                if !weapon_type.compatible_with_style(style) {
-                    Err(WeaponBuildError::IncompatibleStyle(style, weapon_type))
-                } else {
-                    Ok(Weapon {
-                        uuid: Uuid::new_v4(),
-                        weapon_type: WeaponType::Melee,
-                        style: WeaponStyle::Axe,
-                        damage_type: DamageType::Slashing,
-                        properties: vec![],
-                    })
-                }
-            } else {
-                Err(WeaponBuildError::MissingField(vec!["style".into()]))
-            }
+        let mut fa = FieldAggregator::new();
+
+        fa.field_check(&value.weapon_type, "weapon_type");
+        fa.field_check(&value.style, "style");
+        fa.field_check(&value.damage_type, "damage_type");
+
+        WeaponBuildError::try_from(fa).swap()?;
+
+        let weapon_type = value.weapon_type.unwrap();
+        let style = value.style.unwrap();
+
+        if !weapon_type.compatible_with_style(style) {
+            Err(WeaponBuildError::IncompatibleStyle(style, weapon_type))
         } else {
-            Err(WeaponBuildError::MissingField(vec!["type".into()]))
+            Ok(Weapon {
+                uuid: Uuid::new_v4(),
+                weapon_type,
+                style,
+                damage_type: value.damage_type.unwrap(),
+                properties: value.properties.unwrap_or_default(),
+            })
         }
     }
 }
@@ -406,7 +429,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn _enforces_all_required_fields_to_build_weapon() -> Result<(), Box<dyn Error>> {
         let builder = WeaponBuilder::new();
 
@@ -416,7 +438,6 @@ mod tests {
                 "weapon_type".into(),
                 "style".into(),
                 "damage_type".into(),
-                "properties".into()
             ]))
         );
 
@@ -427,15 +448,20 @@ mod tests {
             Err(WeaponBuildError::MissingField(vec![
                 "style".into(),
                 "damage_type".into(),
-                "properties".into()
             ]))
         );
 
-        let builder = builder.with_style(WeaponStyle::Sword)?;
+        let weapon = builder.with_style(WeaponStyle::Sword)?.build()?;
 
         assert_eq!(
-            builder.clone().build(),
-            Err(WeaponBuildError::MissingField(vec!["properties".into()]))
+            Weapon {
+                uuid: weapon.uuid,
+                weapon_type: WeaponType::Melee,
+                style: WeaponStyle::Sword,
+                damage_type: DamageType::Slashing,
+                properties: vec![]
+            },
+            weapon
         );
 
         Ok(())
