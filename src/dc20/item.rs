@@ -24,6 +24,13 @@ impl WeaponType {
             WeaponType::Ranged => matches!(style, WeaponStyle::Bow | WeaponStyle::Crossbow),
         }
     }
+
+    pub fn compatible_with_property(self, property: WeaponProperty) -> bool {
+        match self {
+            WeaponType::Melee => property.is_melee_property(),
+            WeaponType::Ranged => property.is_ranged_property(),
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -46,15 +53,16 @@ impl WeaponStyle {
         weapon_type.compatible_with_style(self)
     }
 
-    pub fn default_damage_type(self) -> DamageType {
+    pub fn default_damage_type(self) -> Option<DamageType> {
         match self {
-            WeaponStyle::Axe | WeaponStyle::Sword | WeaponStyle::Whip => DamageType::Slashing,
+            WeaponStyle::Axe | WeaponStyle::Sword | WeaponStyle::Whip => Some(DamageType::Slashing),
             WeaponStyle::Bow | WeaponStyle::Crossbow | WeaponStyle::Pick | WeaponStyle::Spear => {
-                DamageType::Piercing
+                Some(DamageType::Piercing)
             }
-            WeaponStyle::Chained | WeaponStyle::Fist | WeaponStyle::Hammer | WeaponStyle::Staff => {
-                DamageType::Bludgeoning
+            WeaponStyle::Chained | WeaponStyle::Hammer | WeaponStyle::Staff => {
+                Some(DamageType::Bludgeoning)
             }
+            WeaponStyle::Fist => None,
         }
     }
 }
@@ -109,6 +117,41 @@ impl WeaponProperty {
             WeaponProperty::Capture => 0,
         }
     }
+
+    pub fn is_melee_property(self) -> bool {
+        matches!(
+            self,
+            Self::Concealable
+                | Self::Guard
+                | Self::Heavy
+                | Self::Impact
+                | Self::MultiFaceted(_)
+                | Self::Reach
+                | Self::Silent
+                | Self::Toss
+                | Self::Thrown
+                | Self::TwoHanded
+                | Self::Unwieldy
+                | Self::Versatile
+        )
+    }
+
+    pub fn is_ranged_property(self) -> bool {
+        matches!(
+            self,
+            Self::Ammo
+                | Self::Heavy
+                | Self::Impact
+                | Self::LongRanged
+                | Self::Reload
+                | Self::TwoHanded
+                | Self::Unwieldy
+        )
+    }
+
+    pub fn compatible_with_weapon_type(self, weapon_type: WeaponType) -> bool {
+        weapon_type.compatible_with_property(self)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -118,6 +161,7 @@ pub enum WeaponBuildError {
     IncompatibleProperty(WeaponProperty, WeaponType),
     DuplicateProperty(WeaponProperty),
     MissingProperty(WeaponProperty),
+    PropertyRequiresStyle(WeaponProperty, WeaponStyle),
 }
 
 impl fmt::Display for WeaponBuildError {
@@ -136,6 +180,8 @@ impl fmt::Display for WeaponBuildError {
                     format!("contains duplicated property `{weapon_property:?}`"),
                 WeaponBuildError::MissingProperty(weapon_property) =>
                     format!("property `{weapon_property:?}` not present"),
+                WeaponBuildError::PropertyRequiresStyle(weapon_property, weapon_style) =>
+                    format!("`{weapon_property:?}` property requires `{weapon_style:?}` style"),
             }
         )
     }
@@ -178,7 +224,7 @@ impl WeaponBuilder {
         }
     }
 
-    pub fn weapon_type(&mut self, weapon_type: WeaponType) -> Result<(), WeaponBuildError> {
+    pub fn set_weapon_type(&mut self, weapon_type: WeaponType) -> Result<(), WeaponBuildError> {
         if let Some(style) = self.style {
             if !style.compatible_with_type(weapon_type) {
                 return Err(WeaponBuildError::IncompatibleStyle(style, weapon_type));
@@ -190,8 +236,14 @@ impl WeaponBuilder {
         Ok(())
     }
 
+    pub fn with_weapon_type(mut self, weapon_type: WeaponType) -> Result<Self, WeaponBuildError> {
+        self.set_weapon_type(weapon_type)?;
+
+        Ok(self)
+    }
+
     pub fn with_melee(mut self) -> Result<Self, WeaponBuildError> {
-        self.weapon_type(WeaponType::Melee)?;
+        self.set_weapon_type(WeaponType::Melee)?;
 
         Ok(self)
     }
@@ -201,7 +253,7 @@ impl WeaponBuilder {
     }
 
     pub fn with_ranged(mut self) -> Result<Self, WeaponBuildError> {
-        self.weapon_type(WeaponType::Ranged)?;
+        self.set_weapon_type(WeaponType::Ranged)?;
 
         Ok(self)
     }
@@ -218,7 +270,7 @@ impl WeaponBuilder {
             .unwrap()
     }
 
-    pub fn style(&mut self, style: WeaponStyle) -> Result<(), WeaponBuildError> {
+    pub fn set_style(&mut self, style: WeaponStyle) -> Result<(), WeaponBuildError> {
         if let Some(weapon_type) = self.weapon_type {
             if !weapon_type.compatible_with_style(style) {
                 return Err(WeaponBuildError::IncompatibleStyle(style, weapon_type));
@@ -226,7 +278,7 @@ impl WeaponBuilder {
         }
 
         if self.damage_type.is_none() {
-            let _ = self.damage_type.insert(style.default_damage_type());
+            self.damage_type = style.default_damage_type();
         }
 
         let _ = self.style.insert(style);
@@ -235,17 +287,17 @@ impl WeaponBuilder {
     }
 
     pub fn with_style(mut self, style: WeaponStyle) -> Result<Self, WeaponBuildError> {
-        self.style(style)?;
+        self.set_style(style)?;
 
         Ok(self)
     }
 
-    pub fn damage_type(&mut self, damage_type: DamageType) {
+    pub fn set_damage_type(&mut self, damage_type: DamageType) {
         let _ = self.damage_type.insert(damage_type);
     }
 
     pub fn with_damage_type(mut self, damage_type: DamageType) -> Self {
-        self.damage_type(damage_type);
+        self.set_damage_type(damage_type);
 
         self
     }
@@ -257,6 +309,15 @@ impl WeaponBuilder {
             .is_some_and(|ps| ps.contains(&property))
         {
             return Err(WeaponBuildError::DuplicateProperty(property));
+        }
+
+        if let Some(weapon_type) = self.weapon_type {
+            if !weapon_type.compatible_with_property(property) {
+                return Err(WeaponBuildError::IncompatibleProperty(
+                    property,
+                    weapon_type,
+                ));
+            }
         }
 
         self.properties.get_or_insert_default().push(property);
@@ -495,15 +556,56 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
-    fn _fist_weapon_does_not_have_default_style() {
-        todo!()
+    fn _fist_weapon_does_not_have_default_style() -> Result<(), Box<dyn Error>> {
+        assert_eq!(
+            WeaponBuilder::new_melee()
+                .with_style(WeaponStyle::Fist)?
+                .damage_type,
+            None
+        );
+
+        Ok(())
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
     fn _weapon_type_and_property_must_be_compatible() -> Result<(), Box<dyn Error>> {
-        todo!()
+        assert_eq!(
+            WeaponBuilder::new_melee().with_property(WeaponProperty::LongRanged),
+            Err(WeaponBuildError::IncompatibleProperty(
+                WeaponProperty::LongRanged,
+                WeaponType::Melee
+            ))
+        );
+
+        assert_eq!(
+            WeaponBuilder::new_ranged().with_property(WeaponProperty::Reach),
+            Err(WeaponBuildError::IncompatibleProperty(
+                WeaponProperty::Reach,
+                WeaponType::Ranged
+            ))
+        );
+
+        assert_eq!(
+            WeaponBuilder::new_melee().with_property(WeaponProperty::Heavy),
+            Ok(WeaponBuilder {
+                weapon_type: Some(WeaponType::Melee),
+                properties: Some(vec![WeaponProperty::Heavy]),
+                ..WeaponBuilder::new()
+            })
+        );
+
+        assert_eq!(
+            WeaponBuilder::new()
+                .with_weapon_type(WeaponType::Ranged)?
+                .with_property(WeaponProperty::Heavy),
+            Ok(WeaponBuilder {
+                weapon_type: Some(WeaponType::Ranged),
+                properties: Some(vec![WeaponProperty::Heavy]),
+                ..WeaponBuilder::new()
+            })
+        );
+
+        Ok(())
     }
 
     #[test]
