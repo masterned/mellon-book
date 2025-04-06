@@ -490,6 +490,48 @@ mod tests {
 
     #[test]
     #[ignore = "not yet implemented"]
+    fn _ranged_weapons_have_longer_ranges_than_melee_weapons() {
+        todo!()
+    }
+
+    #[test]
+    #[ignore = "not yet implemented"]
+    fn _fist_weapon_does_not_have_default_style() {
+        todo!()
+    }
+
+    #[test]
+    #[ignore = "not yet implemented"]
+    fn _weapon_type_and_property_must_be_compatible() -> Result<(), Box<dyn Error>> {
+        todo!()
+    }
+
+    #[test]
+    #[ignore = "not yet implemented"]
+    fn _properties_requiring_other_properties_must_be_enforced() -> Result<(), Box<dyn Error>> {
+        todo!()
+    }
+
+    #[test]
+    #[ignore = "not yet implemented"]
+    fn _enforce_style_requirements_for_properties() -> Result<(), Box<dyn Error>> {
+        todo!()
+    }
+
+    #[test]
+    #[ignore = "not yet implemented"]
+    fn _properties_with_exclusion_rules_most_be_enforced() -> Result<(), Box<dyn Error>> {
+        todo!()
+    }
+
+    #[test]
+    #[ignore = "not yet implemented"]
+    fn _enforce_weapon_type_required_properties() {
+        todo!()
+    }
+
+    #[test]
+    #[ignore = "not yet implemented"]
     fn _cannot_exceed_available_points_on_weapon_build() {
         todo!()
     }
