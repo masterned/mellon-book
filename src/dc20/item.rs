@@ -152,6 +152,14 @@ impl WeaponProperty {
     pub fn compatible_with_weapon_type(self, weapon_type: WeaponType) -> bool {
         weapon_type.compatible_with_property(self)
     }
+
+    pub fn get_property_dependency(self) -> Option<Self> {
+        match self {
+            Self::Heavy => Some(Self::TwoHanded),
+            Self::Thrown | Self::Returning => Some(Self::Toss),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -160,7 +168,7 @@ pub enum WeaponBuildError {
     IncompatibleStyle(WeaponStyle, WeaponType),
     IncompatibleProperty(WeaponProperty, WeaponType),
     DuplicateProperty(WeaponProperty),
-    MissingProperty(WeaponProperty),
+    MissingProperty(Vec<WeaponProperty>),
     PropertyRequiresStyle(WeaponProperty, WeaponStyle),
 }
 
@@ -178,8 +186,14 @@ impl fmt::Display for WeaponBuildError {
                     format!("{property:?} property incompatible with a {weapon_type:?} weapon"),
                 WeaponBuildError::DuplicateProperty(weapon_property) =>
                     format!("contains duplicated property `{weapon_property:?}`"),
-                WeaponBuildError::MissingProperty(weapon_property) =>
-                    format!("property `{weapon_property:?}` not present"),
+                WeaponBuildError::MissingProperty(properties) => format!(
+                    "`{}` property(ies) required",
+                    properties
+                        .iter()
+                        .map(|p| format!("{p:?}"))
+                        .collect::<Vec<_>>()
+                        .join("`, `")
+                ),
                 WeaponBuildError::PropertyRequiresStyle(weapon_property, weapon_style) =>
                     format!("`{weapon_property:?}` property requires `{weapon_style:?}` style"),
             }
@@ -347,7 +361,7 @@ impl WeaponBuilder {
             let index = properties
                 .iter()
                 .position(|&p| p == property)
-                .ok_or(WeaponBuildError::MissingProperty(property))?;
+                .ok_or(WeaponBuildError::MissingProperty(vec![property]))?;
             properties.remove(index);
 
             Ok(())
@@ -362,6 +376,16 @@ impl WeaponBuilder {
         Ok(self)
     }
 
+    fn missing_dependency_properties(&self) -> Vec<WeaponProperty> {
+        self.properties.as_ref().map_or(vec![], |props| {
+            props
+                .iter()
+                .filter_map(|p| p.get_property_dependency())
+                .filter(|dep| !self.properties.as_ref().unwrap().contains(dep))
+                .collect()
+        })
+    }
+
     pub fn build(self) -> Result<Weapon, WeaponBuildError> {
         let mut fa = FieldAggregator::new();
 
@@ -370,6 +394,11 @@ impl WeaponBuilder {
         fa.field_check(&self.damage_type, "damage_type");
 
         WeaponBuildError::try_from(fa).swap()?;
+
+        let missing_deps = self.missing_dependency_properties();
+        if !missing_deps.is_empty() {
+            Err(WeaponBuildError::MissingProperty(missing_deps))?;
+        }
 
         let weapon_type = self.weapon_type.unwrap();
         let style = self.style.unwrap();
@@ -457,7 +486,9 @@ mod tests {
 
         assert_eq!(
             builder.remove_property(WeaponProperty::Ammo),
-            Err(WeaponBuildError::MissingProperty(WeaponProperty::Ammo))
+            Err(WeaponBuildError::MissingProperty(vec![
+                WeaponProperty::Ammo
+            ]))
         );
 
         Ok(())
@@ -609,9 +640,44 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
     fn _properties_requiring_other_properties_must_be_enforced() -> Result<(), Box<dyn Error>> {
-        todo!()
+        let heavy = WeaponBuilder::new_melee()
+            .with_property(WeaponProperty::Heavy)?
+            .with_style(WeaponStyle::Axe)?;
+
+        assert_eq!(
+            heavy.clone().build(),
+            Err(WeaponBuildError::MissingProperty(vec![
+                WeaponProperty::TwoHanded
+            ]))
+        );
+
+        let heavy = heavy.with_property(WeaponProperty::TwoHanded)?.build()?;
+
+        assert_eq!(
+            heavy,
+            Weapon {
+                uuid: heavy.uuid,
+                weapon_type: WeaponType::Melee,
+                style: WeaponStyle::Axe,
+                damage_type: DamageType::Slashing,
+                properties: vec![WeaponProperty::Heavy, WeaponProperty::TwoHanded]
+            },
+        );
+
+        assert_eq!(
+            WeaponBuilder::new_melee()
+                .with_property(WeaponProperty::Heavy)?
+                .with_property(WeaponProperty::Thrown)?
+                .with_style(WeaponStyle::Axe)?
+                .build(),
+            Err(WeaponBuildError::MissingProperty(vec![
+                WeaponProperty::TwoHanded,
+                WeaponProperty::Toss
+            ]))
+        );
+
+        Ok(())
     }
 
     #[test]
