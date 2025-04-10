@@ -3,7 +3,7 @@ use std::error::Error;
 
 use uuid::Uuid;
 
-use crate::utils::{FieldAggregator, SwapResult};
+use crate::utils::{FieldAggregator, Logical, SwapResult};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Item {
@@ -64,6 +64,12 @@ impl WeaponStyle {
             }
             WeaponStyle::Fist => None,
         }
+    }
+}
+
+impl fmt::Display for WeaponStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{self:?}")
     }
 }
 
@@ -133,6 +139,8 @@ impl WeaponProperty {
                 | Self::TwoHanded
                 | Self::Unwieldy
                 | Self::Versatile
+                | Self::Returning
+                | Self::Capture
         )
     }
 
@@ -160,6 +168,29 @@ impl WeaponProperty {
             _ => None,
         }
     }
+
+    pub fn is_compatible_with_style(self, style: WeaponStyle) -> bool {
+        match self {
+            Self::Capture => matches!(style, WeaponStyle::Chained | WeaponStyle::Whip),
+            Self::MultiFaceted(s) => s != style,
+            _ => true,
+        }
+    }
+
+    pub fn get_style_dependency(&self) -> Option<Logical<WeaponStyle>> {
+        match self {
+            Self::Capture => {
+                Some(Logical::Unit(WeaponStyle::Chained).or(Logical::Unit(WeaponStyle::Whip)))
+            }
+            _ => None,
+        }
+    }
+}
+
+impl From<WeaponStyle> for Logical<WeaponStyle> {
+    fn from(value: WeaponStyle) -> Self {
+        Logical::Unit(value)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -169,7 +200,7 @@ pub enum WeaponBuildError {
     IncompatibleProperty(WeaponProperty, WeaponType),
     DuplicateProperty(WeaponProperty),
     MissingProperty(Vec<WeaponProperty>),
-    PropertyRequiresStyle(WeaponProperty, WeaponStyle),
+    MissingStyleDependencies(Logical<WeaponStyle>),
 }
 
 impl fmt::Display for WeaponBuildError {
@@ -194,8 +225,8 @@ impl fmt::Display for WeaponBuildError {
                         .collect::<Vec<_>>()
                         .join("`, `")
                 ),
-                WeaponBuildError::PropertyRequiresStyle(weapon_property, weapon_style) =>
-                    format!("`{weapon_property:?}` property requires `{weapon_style:?}` style"),
+                WeaponBuildError::MissingStyleDependencies(dependencies) =>
+                    format!("missing style dependencies: {dependencies:?}"),
             }
         )
     }
@@ -386,6 +417,38 @@ impl WeaponBuilder {
         })
     }
 
+    fn get_style_dependencies(&self) -> Option<Logical<WeaponStyle>> {
+        self.properties.as_ref().and_then(|ps| {
+            ps.iter()
+                .filter_map(WeaponProperty::get_style_dependency)
+                .fold(None, |acc: Option<Logical<WeaponStyle>>, style| {
+                    if let Some(acc) = acc {
+                        Some(acc.and(style))
+                    } else {
+                        Some(style)
+                    }
+                })
+        })
+    }
+
+    fn meets_style_requirements(&self, deps: &Logical<WeaponStyle>) -> bool {
+        match deps {
+            Logical::Unit(dep) => {
+                self.style.is_some_and(|style| style == *dep)
+                    || self
+                        .properties
+                        .as_ref()
+                        .is_some_and(|ps| ps.contains(&WeaponProperty::MultiFaceted(*dep)))
+            }
+            Logical::Or(left, right) => {
+                self.meets_style_requirements(left) || self.meets_style_requirements(right)
+            }
+            Logical::And(left, right) => {
+                self.meets_style_requirements(left) && self.meets_style_requirements(right)
+            }
+        }
+    }
+
     pub fn build(self) -> Result<Weapon, WeaponBuildError> {
         let mut fa = FieldAggregator::new();
 
@@ -402,6 +465,14 @@ impl WeaponBuilder {
 
         let weapon_type = self.weapon_type.unwrap();
         let style = self.style.unwrap();
+
+        if let Some(style_dependencies) = self.get_style_dependencies() {
+            if !self.meets_style_requirements(&style_dependencies) {
+                Err(WeaponBuildError::MissingStyleDependencies(
+                    style_dependencies,
+                ))?;
+            }
+        }
 
         weapon_type
             .compatible_with_style(style)
@@ -681,8 +752,61 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
     fn _enforce_style_requirements_for_properties() -> Result<(), Box<dyn Error>> {
+        let capture = WeaponBuilder::new_melee()
+            .with_property(WeaponProperty::Capture)?
+            .with_style(WeaponStyle::Hammer)?;
+        dbg!(&capture);
+
+        let weapon_build_attempt = capture.clone().build();
+        dbg!(&weapon_build_attempt);
+
+        assert_eq!(
+            weapon_build_attempt,
+            Err(WeaponBuildError::MissingStyleDependencies(
+                Logical::Unit(WeaponStyle::Chained).or(WeaponStyle::Whip.into()),
+            ))
+        );
+
+        let weapon_build_attempt = capture.clone().with_style(WeaponStyle::Chained)?.build()?;
+        dbg!(&weapon_build_attempt);
+        assert_eq!(
+            weapon_build_attempt,
+            Weapon {
+                uuid: weapon_build_attempt.uuid,
+                weapon_type: WeaponType::Melee,
+                style: WeaponStyle::Chained,
+                damage_type: DamageType::Bludgeoning,
+                properties: vec![WeaponProperty::Capture]
+            }
+        );
+
+        let weapon_build_attempt = capture.with_style(WeaponStyle::Whip)?.build()?;
+        dbg!(&weapon_build_attempt);
+        assert_eq!(
+            weapon_build_attempt,
+            Weapon {
+                uuid: weapon_build_attempt.uuid,
+                weapon_type: WeaponType::Melee,
+                style: WeaponStyle::Whip,
+                damage_type: DamageType::Bludgeoning,
+                properties: vec![WeaponProperty::Capture]
+            }
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    #[ignore = "not yet implemented"]
+    fn _weapon_can_meet_style_requirements_using_multi_faceted_property(
+    ) -> Result<(), Box<dyn Error>> {
+        todo!()
+    }
+
+    #[test]
+    #[ignore = "not yet implemented"]
+    fn _cannot_have_duplicate_style_in_multi_faceted_property() -> Result<(), Box<dyn Error>> {
         todo!()
     }
 

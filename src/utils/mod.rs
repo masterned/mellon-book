@@ -1,6 +1,8 @@
 pub mod field_aggregator;
+pub mod logical;
 
 pub use field_aggregator::*;
+pub use logical::*;
 
 pub trait SwapResult<T, E> {
     fn swap(self) -> Result<E, T>;
