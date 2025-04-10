@@ -5,6 +5,8 @@ use uuid::Uuid;
 
 use crate::utils::{FieldAggregator, Logical, SwapResult};
 
+use super::Range;
+
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Item {
     pub uuid: Uuid,
@@ -29,6 +31,13 @@ impl WeaponType {
         match self {
             WeaponType::Melee => property.is_melee_property(),
             WeaponType::Ranged => property.is_ranged_property(),
+        }
+    }
+
+    pub fn default_base_range(&self) -> Range {
+        match self {
+            WeaponType::Melee => Range::Spaces(1),
+            WeaponType::Ranged => Range::Spaces(5),
         }
     }
 }
@@ -258,6 +267,7 @@ pub struct WeaponBuilder {
     pub style: Option<WeaponStyle>,
     pub damage_type: Option<DamageType>,
     pub properties: Option<Vec<WeaponProperty>>,
+    pub base_range: Option<Range>,
     pub max_points: usize,
 }
 
@@ -272,8 +282,12 @@ impl WeaponBuilder {
     pub fn set_weapon_type(&mut self, weapon_type: WeaponType) -> Result<(), WeaponBuildError> {
         if let Some(style) = self.style {
             if !style.compatible_with_type(weapon_type) {
-                return Err(WeaponBuildError::IncompatibleStyle(style, weapon_type));
+                Err(WeaponBuildError::IncompatibleStyle(style, weapon_type))?;
             }
+        }
+
+        if self.base_range.is_none() {
+            self.set_base_range(weapon_type.default_base_range())?;
         }
 
         let _ = self.weapon_type.insert(weapon_type);
@@ -287,20 +301,16 @@ impl WeaponBuilder {
         Ok(self)
     }
 
-    pub fn with_melee(mut self) -> Result<Self, WeaponBuildError> {
-        self.set_weapon_type(WeaponType::Melee)?;
-
-        Ok(self)
+    pub fn with_melee(self) -> Result<Self, WeaponBuildError> {
+        self.with_weapon_type(WeaponType::Melee)
     }
 
     pub fn new_melee() -> Self {
         Self::new().with_melee().unwrap()
     }
 
-    pub fn with_ranged(mut self) -> Result<Self, WeaponBuildError> {
-        self.set_weapon_type(WeaponType::Ranged)?;
-
-        Ok(self)
+    pub fn with_ranged(self) -> Result<Self, WeaponBuildError> {
+        self.with_weapon_type(WeaponType::Ranged)
     }
 
     pub fn new_ranged() -> Self {
@@ -313,6 +323,18 @@ impl WeaponBuilder {
                 WeaponProperty::Unwieldy,
             ])
             .unwrap()
+    }
+
+    pub fn set_base_range(&mut self, base_range: Range) -> Result<(), WeaponBuildError> {
+        let _ = self.base_range.insert(base_range);
+
+        Ok(())
+    }
+
+    pub fn with_base_range(mut self, base_range: Range) -> Result<Self, WeaponBuildError> {
+        self.set_base_range(base_range)?;
+
+        Ok(self)
     }
 
     pub fn set_style(&mut self, style: WeaponStyle) -> Result<(), WeaponBuildError> {
@@ -455,6 +477,7 @@ impl WeaponBuilder {
         fa.field_check(&self.weapon_type, "weapon_type");
         fa.field_check(&self.style, "style");
         fa.field_check(&self.damage_type, "damage_type");
+        fa.field_check(&self.base_range, "base_range");
 
         WeaponBuildError::try_from(fa).swap()?;
 
@@ -482,6 +505,7 @@ impl WeaponBuilder {
                 style,
                 damage_type: self.damage_type.unwrap(),
                 properties: self.properties.unwrap_or_default(),
+                base_range: self.base_range.unwrap(),
             })
             .ok_or(WeaponBuildError::IncompatibleStyle(style, weapon_type))
     }
@@ -494,6 +518,13 @@ pub struct Weapon {
     pub style: WeaponStyle,
     pub damage_type: DamageType,
     pub properties: Vec<WeaponProperty>,
+    pub base_range: Range,
+}
+
+impl Weapon {
+    pub fn get_range(&self) -> Range {
+        Range::Caster
+    }
 }
 
 impl TryFrom<WeaponBuilder> for Weapon {
@@ -515,6 +546,7 @@ mod tests {
 
         let mut builder = WeaponBuilder::new().with_style(WeaponStyle::Bow)?;
         builder.weapon_type = Some(WeaponType::Melee);
+        builder.base_range = Some(Range::Spaces(1));
 
         assert_eq!(
             builder.build(),
@@ -622,11 +654,12 @@ mod tests {
                 "weapon_type".into(),
                 "style".into(),
                 "damage_type".into(),
+                "base_range".into()
             ]))
         );
 
         let builder = builder.with_melee()?;
-
+        dbg!(&builder);
         assert_eq!(
             builder.clone().build(),
             Err(WeaponBuildError::MissingField(vec![
@@ -643,7 +676,8 @@ mod tests {
                 weapon_type: WeaponType::Melee,
                 style: WeaponStyle::Sword,
                 damage_type: DamageType::Slashing,
-                properties: vec![]
+                properties: vec![],
+                base_range: Range::Spaces(1)
             },
             weapon
         );
@@ -652,9 +686,18 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
-    fn _ranged_weapons_have_longer_ranges_than_melee_weapons() {
-        todo!()
+    fn _derive_default_base_range_from_weapon_type() {
+        assert_eq!(WeaponType::Melee.default_base_range(), Range::Spaces(1));
+        assert_eq!(
+            WeaponBuilder::new_melee().base_range.unwrap(),
+            Range::Spaces(1)
+        );
+
+        assert_eq!(WeaponType::Ranged.default_base_range(), Range::Spaces(5));
+        assert_eq!(
+            WeaponBuilder::new_ranged().base_range.unwrap(),
+            Range::Spaces(5)
+        );
     }
 
     #[test]
@@ -692,6 +735,7 @@ mod tests {
             Ok(WeaponBuilder {
                 weapon_type: Some(WeaponType::Melee),
                 properties: Some(vec![WeaponProperty::Heavy]),
+                base_range: Some(Range::Spaces(1)),
                 ..WeaponBuilder::new()
             })
         );
@@ -703,6 +747,7 @@ mod tests {
             Ok(WeaponBuilder {
                 weapon_type: Some(WeaponType::Ranged),
                 properties: Some(vec![WeaponProperty::Heavy]),
+                base_range: Some(Range::Spaces(5)),
                 ..WeaponBuilder::new()
             })
         );
@@ -732,7 +777,8 @@ mod tests {
                 weapon_type: WeaponType::Melee,
                 style: WeaponStyle::Axe,
                 damage_type: DamageType::Slashing,
-                properties: vec![WeaponProperty::Heavy, WeaponProperty::TwoHanded]
+                properties: vec![WeaponProperty::Heavy, WeaponProperty::TwoHanded],
+                base_range: Range::Spaces(1)
             },
         );
 
@@ -777,7 +823,8 @@ mod tests {
                 weapon_type: WeaponType::Melee,
                 style: WeaponStyle::Chained,
                 damage_type: DamageType::Bludgeoning,
-                properties: vec![WeaponProperty::Capture]
+                properties: vec![WeaponProperty::Capture],
+                base_range: Range::Spaces(1)
             }
         );
 
@@ -790,7 +837,8 @@ mod tests {
                 weapon_type: WeaponType::Melee,
                 style: WeaponStyle::Whip,
                 damage_type: DamageType::Bludgeoning,
-                properties: vec![WeaponProperty::Capture]
+                properties: vec![WeaponProperty::Capture],
+                base_range: Range::Spaces(1)
             }
         );
 
