@@ -914,9 +914,38 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
     fn _weapon_can_meet_style_requirements_using_multi_faceted_property() -> Result<()> {
-        todo!()
+        let urumi = WeaponBuilder::new_melee()
+            .with_style(WeaponStyle::Sword)?
+            .with_properties(&[WeaponProperty::Capture])?;
+
+        assert_eq!(
+            urumi.clone().build(),
+            Err(WeaponBuildError::MissingStyleDependencies(
+                Logical::Unit(WeaponStyle::Chained).or(WeaponStyle::Whip.into())
+            ))
+        );
+
+        let urumi = urumi
+            .with_property(WeaponProperty::MultiFaceted(WeaponStyle::Whip))?
+            .build()?;
+
+        assert_eq!(
+            urumi,
+            Weapon {
+                uuid: urumi.uuid,
+                weapon_type: WeaponType::Melee,
+                style: WeaponStyle::Sword,
+                damage_type: DamageType::Slashing,
+                properties: vec![
+                    WeaponProperty::Capture,
+                    WeaponProperty::MultiFaceted(WeaponStyle::Whip),
+                ],
+                base_range: Range::Spaces(1)
+            }
+        );
+
+        Ok(())
     }
 
     #[test]
