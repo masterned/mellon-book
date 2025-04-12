@@ -43,6 +43,12 @@ impl WeaponType {
     }
 }
 
+impl fmt::Display for WeaponType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{self:?}")
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum WeaponStyle {
     Axe,
@@ -203,6 +209,12 @@ impl WeaponProperty {
     }
 }
 
+impl fmt::Display for WeaponProperty {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{self:?}")
+    }
+}
+
 impl From<WeaponStyle> for Logical<WeaponStyle> {
     fn from(value: WeaponStyle) -> Self {
         Logical::Unit(value)
@@ -228,21 +240,21 @@ impl fmt::Display for WeaponBuildError {
                 WeaponBuildError::MissingField(fields) =>
                     format!("missing field(s): `{}`", fields.join("`, `")),
                 WeaponBuildError::IncompatibleStyle(style, weapon_type) =>
-                    format!("{style:?} style incompatible with a {weapon_type:?} weapon"),
+                    format!("{style} style incompatible with a {weapon_type} weapon"),
                 WeaponBuildError::IncompatibleProperty(property, weapon_type) =>
-                    format!("{property:?} property incompatible with a {weapon_type:?} weapon"),
+                    format!("{property} property incompatible with a {weapon_type} weapon"),
                 WeaponBuildError::DuplicateProperty(weapon_property) =>
-                    format!("contains duplicated property `{weapon_property:?}`"),
+                    format!("contains duplicated property `{weapon_property}`"),
                 WeaponBuildError::MissingProperty(properties) => format!(
                     "`{}` property(ies) required",
                     properties
                         .iter()
-                        .map(|p| format!("{p:?}"))
+                        .map(WeaponProperty::to_string)
                         .collect::<Vec<_>>()
                         .join("`, `")
                 ),
                 WeaponBuildError::MissingStyleDependencies(dependencies) =>
-                    format!("missing style dependencies: {dependencies:?}"),
+                    format!("missing style dependencies: {dependencies}"),
             }
         )
     }
@@ -289,122 +301,96 @@ impl WeaponBuilder {
         }
     }
 
-    pub fn set_weapon_type(&mut self, weapon_type: WeaponType) -> Result<()> {
+    pub fn weapon_type(&mut self, weapon_type: WeaponType) -> Result<&mut Self> {
         if let Some(style) = self.style {
             if !style.compatible_with_type(weapon_type) {
                 Err(WeaponBuildError::IncompatibleStyle(style, weapon_type))?;
             }
         }
 
-        self.set_weapon_type_unchecked(weapon_type);
-
-        Ok(())
-    }
-
-    pub fn set_weapon_type_unchecked(&mut self, weapon_type: WeaponType) {
-        if self.base_range.is_none() {
-            self.set_base_range_unchecked(weapon_type.default_base_range());
-        }
-
-        let _ = self.weapon_type.insert(weapon_type);
-    }
-
-    pub fn with_weapon_type(mut self, weapon_type: WeaponType) -> Result<Self> {
-        self.set_weapon_type(weapon_type)?;
+        self.weapon_type_unchecked(weapon_type);
 
         Ok(self)
     }
 
-    #[must_use]
-    pub fn with_weapon_type_unchecked(mut self, weapon_type: WeaponType) -> Self {
-        self.set_weapon_type_unchecked(weapon_type);
+    pub fn weapon_type_unchecked(&mut self, weapon_type: WeaponType) -> &mut Self {
+        if self.base_range.is_none() {
+            self.base_range_unchecked(weapon_type.default_base_range());
+        }
+
+        let _ = self.weapon_type.insert(weapon_type);
 
         self
     }
 
     #[must_use]
     pub fn new_melee() -> Self {
-        Self::new().with_weapon_type_unchecked(WeaponType::Melee)
+        Self::new()
+            .weapon_type_unchecked(WeaponType::Melee)
+            .to_owned()
     }
 
     #[must_use]
     pub fn new_ranged() -> Self {
         Self::new()
-            .with_weapon_type_unchecked(WeaponType::Ranged)
-            .with_properties_unchecked(&[
+            .weapon_type_unchecked(WeaponType::Ranged)
+            .add_properties_unchecked(&[
                 WeaponProperty::Ammo,
                 WeaponProperty::TwoHanded,
                 WeaponProperty::Unwieldy,
             ])
+            .to_owned()
     }
 
-    pub fn set_base_range(&mut self, base_range: Range) -> Result<()> {
-        self.set_base_range_unchecked(base_range);
-
-        Ok(())
-    }
-
-    pub fn set_base_range_unchecked(&mut self, base_range: Range) {
-        let _ = self.base_range.insert(base_range);
-    }
-
-    pub fn with_base_range(mut self, base_range: Range) -> Result<Self> {
-        self.set_base_range(base_range)?;
+    pub fn base_range(&mut self, base_range: Range) -> Result<&mut Self> {
+        self.base_range_unchecked(base_range);
 
         Ok(self)
     }
 
-    pub fn set_style(&mut self, style: WeaponStyle) -> Result<()> {
+    pub fn base_range_unchecked(&mut self, base_range: Range) -> &mut Self {
+        let _ = self.base_range.insert(base_range);
+
+        self
+    }
+
+    pub fn style(&mut self, style: WeaponStyle) -> Result<&mut Self> {
         if let Some(weapon_type) = self.weapon_type {
             if !weapon_type.compatible_with_style(style) {
                 return Err(WeaponBuildError::IncompatibleStyle(style, weapon_type));
             }
         }
 
-        self.set_style_unchecked(style);
+        self.style_unchecked(style);
 
-        Ok(())
+        Ok(self)
     }
 
-    pub fn set_style_unchecked(&mut self, style: WeaponStyle) {
+    pub fn style_unchecked(&mut self, style: WeaponStyle) -> &mut Self {
         if self.damage_type.is_none() {
             if let Some(default_damage_type) = style.default_damage_type() {
-                self.set_damage_type_unchecked(default_damage_type);
+                self.damage_type_unchecked(default_damage_type);
             }
         }
 
         let _ = self.style.insert(style);
-    }
-
-    pub fn with_style(mut self, style: WeaponStyle) -> Result<Self> {
-        self.set_style(style)?;
-
-        Ok(self)
-    }
-
-    pub fn set_damage_type(&mut self, damage_type: DamageType) -> Result<()> {
-        self.set_damage_type_unchecked(damage_type);
-
-        Ok(())
-    }
-
-    pub fn set_damage_type_unchecked(&mut self, damage_type: DamageType) {
-        let _ = self.damage_type.insert(damage_type);
-    }
-
-    pub fn with_damage_type(mut self, damage_type: DamageType) -> Result<Self> {
-        self.set_damage_type(damage_type)?;
-
-        Ok(self)
-    }
-
-    pub fn with_damage_type_unchecked(mut self, damage_type: DamageType) -> Self {
-        self.set_damage_type_unchecked(damage_type);
 
         self
     }
 
-    pub fn add_property(&mut self, property: WeaponProperty) -> Result<()> {
+    pub fn damage_type(&mut self, damage_type: DamageType) -> Result<&mut Self> {
+        self.damage_type_unchecked(damage_type);
+
+        Ok(self)
+    }
+
+    pub fn damage_type_unchecked(&mut self, damage_type: DamageType) -> &mut Self {
+        let _ = self.damage_type.insert(damage_type);
+
+        self
+    }
+
+    pub fn add_property(&mut self, property: WeaponProperty) -> Result<&mut Self> {
         if self
             .properties
             .as_ref()
@@ -424,59 +410,41 @@ impl WeaponBuilder {
 
         self.add_property_unchecked(property);
 
-        Ok(())
+        Ok(self)
     }
 
     pub fn add_property_unchecked(&mut self, property: WeaponProperty) {
         self.properties.get_or_insert_default().push(property);
     }
 
-    pub fn with_property(mut self, property: WeaponProperty) -> Result<Self> {
-        self.add_property(property)?;
-
-        Ok(self)
-    }
-
-    #[must_use]
-    pub fn with_property_unchecked(mut self, property: WeaponProperty) -> Self {
-        self.add_property_unchecked(property);
-
-        self
-    }
-
-    pub fn with_properties(mut self, properties: &[WeaponProperty]) -> Result<Self> {
-        for &property in properties {
-            self.add_property(property)?;
+    pub fn add_properties(&mut self, properties: &[WeaponProperty]) -> Result<&mut Self> {
+        for property in properties {
+            self.add_property(*property)?;
         }
 
         Ok(self)
     }
 
-    #[must_use]
-    pub fn with_properties_unchecked(mut self, properties: &[WeaponProperty]) -> Self {
-        for &property in properties {
-            self.add_property_unchecked(property);
+    pub fn add_properties_unchecked(&mut self, properties: &[WeaponProperty]) -> &mut Self {
+        for property in properties {
+            self.add_property_unchecked(*property);
         }
 
         self
     }
 
-    pub fn remove_property(&mut self, property: WeaponProperty) -> Result<()> {
-        if let Some(properties) = self.properties.as_mut() {
-            let index = properties
-                .iter()
-                .position(|&p| p == property)
-                .ok_or(WeaponBuildError::MissingProperty(vec![property]))?;
-            properties.remove(index);
+    pub fn remove_property(&mut self, property: WeaponProperty) -> Result<&mut Self> {
+        let properties = self
+            .properties
+            .as_mut()
+            .ok_or(WeaponBuildError::MissingField(vec!["properties".into()]))?;
 
-            Ok(())
-        } else {
-            Err(WeaponBuildError::MissingField(vec!["properties".into()]))
-        }
-    }
+        let index = properties
+            .iter()
+            .position(|&p| p == property)
+            .ok_or(WeaponBuildError::MissingProperty(vec![property]))?;
 
-    pub fn without_property(mut self, property: WeaponProperty) -> Result<Self> {
-        self.remove_property(property)?;
+        properties.remove(index);
 
         Ok(self)
     }
@@ -523,7 +491,7 @@ impl WeaponBuilder {
         }
     }
 
-    pub fn build(self) -> Result<Weapon> {
+    pub fn build(&self) -> Result<Weapon> {
         let mut fa = FieldAggregator::new();
 
         fa.field_check(&self.weapon_type, "weapon_type");
@@ -562,7 +530,7 @@ impl WeaponBuilder {
                 damage_type: self
                     .damage_type
                     .ok_or(WeaponBuildError::MissingField(vec!["damage_type".into()]))?,
-                properties: self.properties.unwrap_or_default(),
+                properties: self.properties.clone().unwrap_or_default(),
                 base_range: self
                     .base_range
                     .ok_or(WeaponBuildError::MissingField(vec!["base_range".into()]))?,
@@ -605,7 +573,7 @@ mod tests {
         assert!(WeaponType::Melee.compatible_with_style(WeaponStyle::Axe));
         assert!(!WeaponType::Ranged.compatible_with_style(WeaponStyle::Axe));
 
-        let mut builder = WeaponBuilder::new().with_style(WeaponStyle::Bow)?;
+        let mut builder = WeaponBuilder::new().style(WeaponStyle::Bow)?.to_owned();
         builder.weapon_type = Some(WeaponType::Melee);
         builder.base_range = Some(Range::Spaces(1));
 
@@ -624,8 +592,8 @@ mod tests {
     fn _cannot_add_duplicate_property() -> Result<()> {
         assert_eq!(
             WeaponBuilder::new()
-                .with_property(WeaponProperty::Ammo)?
-                .with_property(WeaponProperty::Ammo),
+                .add_property(WeaponProperty::Ammo)?
+                .add_property(WeaponProperty::Ammo),
             Err(WeaponBuildError::DuplicateProperty(WeaponProperty::Ammo))
         );
 
@@ -644,7 +612,7 @@ mod tests {
     fn _cannot_remove_property_if_property_not_present() -> Result<()> {
         assert_eq!(
             WeaponBuilder::new_melee()
-                .with_property(WeaponProperty::Impact)?
+                .add_property(WeaponProperty::Impact)?
                 .remove_property(WeaponProperty::Ammo),
             Err(WeaponBuildError::MissingProperty(vec![
                 WeaponProperty::Ammo
@@ -671,21 +639,21 @@ mod tests {
     fn _default_damage_type_based_on_style() -> Result<()> {
         assert_eq!(
             WeaponBuilder::new_melee()
-                .with_style(WeaponStyle::Sword)?
+                .style(WeaponStyle::Sword)?
                 .damage_type,
             Some(DamageType::Slashing)
         );
 
         assert_eq!(
             WeaponBuilder::new_melee()
-                .with_style(WeaponStyle::Hammer)?
+                .style(WeaponStyle::Hammer)?
                 .damage_type,
             Some(DamageType::Bludgeoning)
         );
 
         assert_eq!(
             WeaponBuilder::new_melee()
-                .with_style(WeaponStyle::Pick)?
+                .style(WeaponStyle::Pick)?
                 .damage_type,
             Some(DamageType::Piercing)
         );
@@ -697,8 +665,8 @@ mod tests {
     fn _do_not_override_damage_type_with_default_if_damage_type_already_set() -> Result<()> {
         assert_eq!(
             WeaponBuilder::new_melee()
-                .with_damage_type(DamageType::Bludgeoning)?
-                .with_style(WeaponStyle::Sword)?
+                .damage_type(DamageType::Bludgeoning)?
+                .style(WeaponStyle::Sword)?
                 .damage_type,
             Some(DamageType::Bludgeoning)
         );
@@ -714,7 +682,7 @@ mod tests {
 
     #[test]
     fn _enforces_all_required_fields_to_build_weapon() -> Result<()> {
-        let builder = WeaponBuilder::new();
+        let mut builder = WeaponBuilder::new();
 
         assert_eq!(
             builder.clone().build(),
@@ -726,7 +694,7 @@ mod tests {
             ]))
         );
 
-        let builder = builder.with_weapon_type(WeaponType::Melee)?;
+        let builder = builder.weapon_type(WeaponType::Melee)?;
         dbg!(&builder);
         assert_eq!(
             builder.clone().build(),
@@ -736,7 +704,7 @@ mod tests {
             ]))
         );
 
-        let weapon = builder.with_style(WeaponStyle::Sword)?.build()?;
+        let weapon = builder.style(WeaponStyle::Sword)?.build()?;
 
         assert_eq!(
             Weapon {
@@ -772,7 +740,7 @@ mod tests {
     fn _fist_weapon_does_not_have_default_style() -> Result<()> {
         assert_eq!(
             WeaponBuilder::new_melee()
-                .with_style(WeaponStyle::Fist)?
+                .style(WeaponStyle::Fist)?
                 .damage_type,
             None
         );
@@ -783,7 +751,7 @@ mod tests {
     #[test]
     fn _weapon_type_and_property_must_be_compatible() -> Result<()> {
         assert_eq!(
-            WeaponBuilder::new_melee().with_property(WeaponProperty::LongRanged),
+            WeaponBuilder::new_melee().add_property(WeaponProperty::LongRanged),
             Err(WeaponBuildError::IncompatibleProperty(
                 WeaponProperty::LongRanged,
                 WeaponType::Melee
@@ -791,7 +759,7 @@ mod tests {
         );
 
         assert_eq!(
-            WeaponBuilder::new_ranged().with_property(WeaponProperty::Reach),
+            WeaponBuilder::new_ranged().add_property(WeaponProperty::Reach),
             Err(WeaponBuildError::IncompatibleProperty(
                 WeaponProperty::Reach,
                 WeaponType::Ranged
@@ -799,25 +767,28 @@ mod tests {
         );
 
         assert_eq!(
-            WeaponBuilder::new_melee().with_property(WeaponProperty::Heavy),
-            Ok(WeaponBuilder {
+            WeaponBuilder::new_melee()
+                .add_property(WeaponProperty::Heavy)?
+                .to_owned(),
+            WeaponBuilder {
                 weapon_type: Some(WeaponType::Melee),
                 properties: Some(vec![WeaponProperty::Heavy]),
                 base_range: Some(Range::Spaces(1)),
                 ..WeaponBuilder::new()
-            })
+            }
         );
 
         assert_eq!(
             WeaponBuilder::new()
-                .with_weapon_type(WeaponType::Ranged)?
-                .with_property(WeaponProperty::Heavy),
-            Ok(WeaponBuilder {
+                .weapon_type(WeaponType::Ranged)?
+                .add_property(WeaponProperty::Heavy)?
+                .to_owned(),
+            WeaponBuilder {
                 weapon_type: Some(WeaponType::Ranged),
                 properties: Some(vec![WeaponProperty::Heavy]),
                 base_range: Some(Range::Spaces(5)),
                 ..WeaponBuilder::new()
-            })
+            }
         );
 
         Ok(())
@@ -825,9 +796,10 @@ mod tests {
 
     #[test]
     fn _properties_requiring_other_properties_must_be_enforced() -> Result<()> {
-        let heavy = WeaponBuilder::new_melee()
-            .with_property(WeaponProperty::Heavy)?
-            .with_style(WeaponStyle::Axe)?;
+        let mut heavy = WeaponBuilder::new_melee()
+            .add_property(WeaponProperty::Heavy)?
+            .style(WeaponStyle::Axe)?
+            .to_owned();
 
         assert_eq!(
             heavy.clone().build(),
@@ -836,7 +808,7 @@ mod tests {
             ]))
         );
 
-        let heavy = heavy.with_property(WeaponProperty::TwoHanded)?.build()?;
+        let heavy = heavy.add_property(WeaponProperty::TwoHanded)?.build()?;
 
         assert_eq!(
             heavy,
@@ -852,9 +824,8 @@ mod tests {
 
         assert_eq!(
             WeaponBuilder::new_melee()
-                .with_property(WeaponProperty::Heavy)?
-                .with_property(WeaponProperty::Thrown)?
-                .with_style(WeaponStyle::Axe)?
+                .add_properties(&[WeaponProperty::Heavy, WeaponProperty::Thrown])?
+                .style(WeaponStyle::Axe)?
                 .build(),
             Err(WeaponBuildError::MissingProperty(vec![
                 WeaponProperty::TwoHanded,
@@ -867,9 +838,10 @@ mod tests {
 
     #[test]
     fn _enforce_style_requirements_for_properties() -> Result<()> {
-        let capture = WeaponBuilder::new_melee()
-            .with_property(WeaponProperty::Capture)?
-            .with_style(WeaponStyle::Hammer)?;
+        let mut capture = WeaponBuilder::new_melee()
+            .add_property(WeaponProperty::Capture)?
+            .style(WeaponStyle::Hammer)?
+            .to_owned();
         dbg!(&capture);
 
         let weapon_build_attempt = capture.clone().build();
@@ -882,7 +854,7 @@ mod tests {
             ))
         );
 
-        let weapon_build_attempt = capture.clone().with_style(WeaponStyle::Chained)?.build()?;
+        let weapon_build_attempt = capture.clone().style(WeaponStyle::Chained)?.build()?;
         dbg!(&weapon_build_attempt);
         assert_eq!(
             weapon_build_attempt,
@@ -896,7 +868,7 @@ mod tests {
             }
         );
 
-        let weapon_build_attempt = capture.with_style(WeaponStyle::Whip)?.build()?;
+        let weapon_build_attempt = capture.style(WeaponStyle::Whip)?.build()?;
         dbg!(&weapon_build_attempt);
         assert_eq!(
             weapon_build_attempt,
@@ -915,9 +887,10 @@ mod tests {
 
     #[test]
     fn _weapon_can_meet_style_requirements_using_multi_faceted_property() -> Result<()> {
-        let urumi = WeaponBuilder::new_melee()
-            .with_style(WeaponStyle::Sword)?
-            .with_properties(&[WeaponProperty::Capture])?;
+        let mut urumi = WeaponBuilder::new_melee()
+            .style(WeaponStyle::Sword)?
+            .add_properties(&[WeaponProperty::Capture])?
+            .to_owned();
 
         assert_eq!(
             urumi.clone().build(),
@@ -927,7 +900,7 @@ mod tests {
         );
 
         let urumi = urumi
-            .with_property(WeaponProperty::MultiFaceted(WeaponStyle::Whip))?
+            .add_property(WeaponProperty::MultiFaceted(WeaponStyle::Whip))?
             .build()?;
 
         assert_eq!(
