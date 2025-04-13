@@ -14,10 +14,7 @@ pub enum WeaponType {
 impl WeaponType {
     #[must_use]
     pub fn compatible_with_style(self, style: WeaponStyle) -> bool {
-        match self {
-            WeaponType::Melee => !matches!(style, WeaponStyle::Bow | WeaponStyle::Crossbow),
-            WeaponType::Ranged => matches!(style, WeaponStyle::Bow | WeaponStyle::Crossbow),
-        }
+        style.get_weapon_type() == self
     }
 
     #[must_use]
@@ -59,6 +56,21 @@ pub enum WeaponStyle {
 }
 
 impl WeaponStyle {
+    pub fn get_weapon_type(&self) -> WeaponType {
+        match self {
+            WeaponStyle::Axe
+            | WeaponStyle::Chained
+            | WeaponStyle::Fist
+            | WeaponStyle::Hammer
+            | WeaponStyle::Pick
+            | WeaponStyle::Spear
+            | WeaponStyle::Staff
+            | WeaponStyle::Sword
+            | WeaponStyle::Whip => WeaponType::Melee,
+            WeaponStyle::Bow | WeaponStyle::Crossbow => WeaponType::Ranged,
+        }
+    }
+
     #[must_use]
     pub fn compatible_with_type(self, weapon_type: WeaponType) -> bool {
         weapon_type.compatible_with_style(self)
@@ -367,6 +379,10 @@ impl WeaponBuilder {
             }
         }
 
+        if self.weapon_type.is_none() {
+            self.weapon_type_unchecked(style.get_weapon_type());
+        }
+
         let _ = self.style.insert(style);
 
         self
@@ -669,9 +685,24 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "not yet implemented"]
     fn _set_weapon_type_based_on_style_if_unset() -> Result<()> {
-        todo!()
+        assert_eq!(
+            WeaponBuilder::new()
+                .style(WeaponStyle::Sword)?
+                .to_owned()
+                .weapon_type,
+            Some(WeaponType::Melee)
+        );
+
+        assert_eq!(
+            WeaponBuilder::new()
+                .style(WeaponStyle::Bow)?
+                .to_owned()
+                .weapon_type,
+            Some(WeaponType::Ranged)
+        );
+
+        Ok(())
     }
 
     #[test]
