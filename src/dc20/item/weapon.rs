@@ -5,12 +5,6 @@ use crate::{
 use std::{error::Error, fmt};
 use uuid::Uuid;
 
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct Item {
-    pub uuid: Uuid,
-    pub name: String,
-}
-
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum WeaponType {
     Melee,
