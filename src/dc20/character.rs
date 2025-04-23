@@ -264,7 +264,7 @@ impl Defense {
 #[cfg(test)]
 mod tests {
     use crate::dc20::{
-        background, AncestryInstance, Attribute, AttributesBuilder, LanguageFluency, Mastery, Skill,
+        AncestryInstance, Attribute, AttributesBuilder, LanguageFluency, Mastery, Skill,
     };
 
     use super::*;
@@ -323,10 +323,11 @@ mod tests {
 
         let champion = ClassEntry::new("Champion");
 
-        let soldier = background::Builder::new("Soldier")
-            .add_skill(Skill::new("Athletics"))
-            .add_trade(Skill::new("Blacksmithing"))
-            .add_language_fluency(LanguageFluency::common())
+        let soldier = Background::builder()
+            .name("Soldier")?
+            .skill(Skill::new("Athletics"))
+            .trade(Skill::new("Blacksmithing"))
+            .language_fluency(LanguageFluency::common())
             .build()?;
 
         let attributes = AttributesBuilder::new()

@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use mellon_book::dc20::{
-    background, AncestryEntry, AncestryInstanceBuilder, AncestryTrait, AttributesBuilder,
+    AncestryEntry, AncestryInstanceBuilder, AncestryTrait, AttributesBuilder, Background,
     LanguageFluency, Origin,
 };
 use mellon_book::dc20::{Attribute, CharacterBuilder, ClassEntry, Defense, Skill};
@@ -30,10 +30,11 @@ fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
         .class(ClassEntry::new("Champion"))
         .origin(Origin::PureBred(human))
         .background(
-            background::Builder::new("Soldier")
-                .add_skill(Skill::new("Athletics"))
-                .add_trade(Skill::new("Blacksmithing"))
-                .add_language_fluency(LanguageFluency::common())
+            Background::builder()
+                .name("Soldier")?
+                .skill(Skill::new("Athletics"))
+                .trade(Skill::new("Blacksmithing"))
+                .language_fluency(LanguageFluency::common())
                 .build()?,
         )
         .attributes(

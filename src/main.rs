@@ -48,10 +48,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         })
         .origin(Origin::HybridBred(human, psyborn))
         .background(
-            background::Builder::new("Bounty Hunter")
-                .add_trade(Skill::new("Engineering").with_mastery(Mastery::Novice))
-                .add_skill(Skill::new("Perception").with_mastery(Mastery::Novice))
-                .add_language_fluency(LanguageFluency::common())
+            Background::builder()
+                .name("Bounty Hunter")?
+                .trade(Skill::new("Engineering").with_mastery(Mastery::Novice))
+                .skill(Skill::new("Perception").with_mastery(Mastery::Novice))
+                .language_fluency(LanguageFluency::common())
                 .build()?,
         )
         .attributes(
