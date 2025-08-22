@@ -46,7 +46,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             ],
             ..ClassEntry::new("Sorcerer")
         })
-        .origin(Origin::HybridBred(human, psyborn))
+        .ancestry(Origin::HybridBred(human, psyborn))
         .background(
             Background::builder()
                 .name("Bounty Hunter")?
@@ -56,7 +56,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .build()?,
         )
         .attributes(
-            AttributesBuilder::new()
+            Attributes::builder()
                 .prime(Attribute {
                     base_score: 4,
                     save_proficiency: false,

@@ -1,8 +1,7 @@
 use std::{error::Error, fmt, str::FromStr};
 
+use turann::Builder;
 use uuid::Uuid;
-
-use crate::utils::{FieldAggregator, SwapResult};
 
 use super::Level;
 
@@ -56,124 +55,7 @@ pub enum Mastery {
     GrandMaster = 10,
 }
 
-#[derive(Clone, Debug, Default)]
-pub struct AttributesBuilder {
-    prime: Option<Attribute>,
-    might: Option<Attribute>,
-    agility: Option<Attribute>,
-    charisma: Option<Attribute>,
-    intelligence: Option<Attribute>,
-}
-
-impl AttributesBuilder {
-    pub fn new() -> Self {
-        AttributesBuilder::default()
-    }
-
-    pub fn prime(mut self, prime: Attribute) -> Self {
-        let _ = self.prime.insert(prime);
-
-        self
-    }
-
-    pub fn might(mut self, might: Attribute) -> Self {
-        let _ = self.might.insert(might);
-
-        self
-    }
-
-    pub fn agility(mut self, agility: Attribute) -> Self {
-        let _ = self.agility.insert(agility);
-
-        self
-    }
-
-    pub fn charisma(mut self, charisma: Attribute) -> Self {
-        let _ = self.charisma.insert(charisma);
-
-        self
-    }
-
-    pub fn intelligence(mut self, intelligence: Attribute) -> Self {
-        let _ = self.intelligence.insert(intelligence);
-
-        self
-    }
-
-    pub fn build(self) -> Result<Attributes, AttributesBuildError> {
-        self.try_into()
-    }
-}
-
-#[derive(Clone, Debug)]
-pub enum AttributesBuildError {
-    FieldMissing(Vec<AttributeName>),
-}
-
-impl fmt::Display for AttributesBuildError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Unable to build Attributes: {}",
-            match self {
-                AttributesBuildError::FieldMissing(fields) => format!(
-                    "missing field(s): {}",
-                    fields
-                        .iter()
-                        .map(|s| format!("`{s}`"))
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                ),
-            }
-        )
-    }
-}
-
-impl Error for AttributesBuildError {}
-
-impl TryFrom<FieldAggregator> for AttributesBuildError {
-    type Error = ();
-
-    fn try_from(value: FieldAggregator) -> Result<Self, Self::Error> {
-        value
-            .0
-            .map(|fields: Vec<&'static str>| {
-                AttributesBuildError::FieldMissing(
-                    fields
-                        .iter()
-                        .map(|field| field.parse().expect("I have no clue how you got here..."))
-                        .collect(),
-                )
-            })
-            .ok_or(())
-    }
-}
-
-impl TryFrom<AttributesBuilder> for Attributes {
-    type Error = AttributesBuildError;
-
-    fn try_from(value: AttributesBuilder) -> Result<Self, Self::Error> {
-        let mut aggregator = FieldAggregator::new();
-
-        aggregator.field_check(&value.prime, "Prime");
-        aggregator.field_check(&value.might, "Might");
-        aggregator.field_check(&value.agility, "Agility");
-        aggregator.field_check(&value.charisma, "Charisma");
-        aggregator.field_check(&value.intelligence, "Intelligence");
-
-        AttributesBuildError::try_from(aggregator).swap()?;
-
-        Ok(Attributes {
-            prime: value.prime.unwrap(),
-            might: value.might.unwrap(),
-            agility: value.agility.unwrap(),
-            charisma: value.charisma.unwrap(),
-            intelligence: value.intelligence.unwrap(),
-        })
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Builder, Clone, Debug, PartialEq)]
 pub struct Attributes {
     prime: Attribute,
     might: Attribute,

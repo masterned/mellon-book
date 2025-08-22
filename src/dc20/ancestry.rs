@@ -1,6 +1,7 @@
 use core::fmt;
 use std::error::Error;
 
+use turann::Builder;
 use uuid::Uuid;
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -329,10 +330,12 @@ impl TryFrom<AncestryInstanceBuilder> for AncestryInstance {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Builder, Clone, Debug, Default, PartialEq)]
 pub struct AncestryTrait {
+    #[builder(default = Uuid::new_v4)]
     pub uuid: Uuid,
     pub name: String,
+    #[builder(default)]
     pub cost: isize,
     pub description: String,
 }

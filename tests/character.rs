@@ -1,10 +1,6 @@
 use std::error::Error;
 
-use mellon_book::dc20::{
-    AncestryEntry, AncestryInstanceBuilder, AncestryTrait, AttributesBuilder, Background,
-    LanguageFluency, Origin,
-};
-use mellon_book::dc20::{Attribute, CharacterBuilder, ClassEntry, Defense, Skill};
+use mellon_book::dc20::*;
 use uuid::Uuid;
 
 #[test]
@@ -24,11 +20,11 @@ fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
     .add_ancestry_trait(unkillable)?
     .build()?;
 
-    let test_character = CharacterBuilder::new()
+    let test_character = Character::builder()
         .player_name("Test Player")
         .character_name("Test Name")
         .class(ClassEntry::new("Champion"))
-        .origin(Origin::PureBred(human))
+        .ancestry(Origin::PureBred(human))
         .background(
             Background::builder()
                 .name("Soldier")?
@@ -38,7 +34,7 @@ fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
                 .build()?,
         )
         .attributes(
-            AttributesBuilder::new()
+            Attributes::builder()
                 .prime(Attribute::new().with_base_score(3).with_save_proficiency())
                 .might(Attribute::default())
                 .agility(Attribute::default())
