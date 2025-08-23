@@ -64,7 +64,27 @@ pub struct Attributes {
     intelligence: Attribute,
 }
 
-impl Attributes {}
+impl Attributes {
+    pub fn prime(&self) -> &Attribute {
+        &self.prime
+    }
+
+    pub fn might(&self) -> &Attribute {
+        &self.might
+    }
+
+    pub fn agility(&self) -> &Attribute {
+        &self.agility
+    }
+
+    pub fn charisma(&self) -> &Attribute {
+        &self.charisma
+    }
+
+    pub fn intelligence(&self) -> &Attribute {
+        &self.intelligence
+    }
+}
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Attribute {
