@@ -7,7 +7,6 @@ pub mod item;
 pub mod language;
 pub mod maneuver;
 pub mod spell;
-pub mod technique;
 
 pub use ancestry::*;
 pub use attribute::*;
@@ -18,4 +17,3 @@ pub use item::*;
 pub use language::*;
 pub use maneuver::*;
 pub use spell::*;
-pub use technique::*;

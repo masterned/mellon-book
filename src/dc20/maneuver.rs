@@ -16,6 +16,7 @@ pub struct Maneuver {
     #[builder(default = Uuid::new_v4)]
     pub uuid: Uuid,
     pub name: String,
-    pub cost: Points,
+    #[builder(each = "cost")]
+    pub cost: Vec<Points>,
     pub description: String,
 }
