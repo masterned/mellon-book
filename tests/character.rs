@@ -1,10 +1,12 @@
 use std::error::Error;
 
-use mellon_book::dc20::*;
+use mellon_book::{dc20::*, player::Player};
 use uuid::Uuid;
 
 #[test]
 fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
+    let player = Player::builder().name("Test Player")?.build()?;
+
     let unkillable = AncestryTrait {
         uuid: Uuid::new_v4(),
         name: "Unkillable".into(),
@@ -21,7 +23,7 @@ fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
     .build()?;
 
     let test_character = Character::builder()
-        .player_name("Test Player")
+        .player(player)
         .character_name("Test Name")
         .class(ClassEntry::new("Champion"))
         .ancestry(Origin::PureBred(human))

@@ -1,13 +1,15 @@
 use turann::Builder;
 use uuid::Uuid;
 
+use crate::player::Player;
+
 use super::{Attributes, Background, ClassEntry, Origin};
 
 #[derive(Builder, Clone, Debug, PartialEq)]
 pub struct Character {
     #[builder(default = Uuid::new_v4)]
     id: Uuid,
-    player_name: String,
+    player: Player,
     character_name: String,
     class: ClassEntry,
     ancestry: Origin,
@@ -25,7 +27,7 @@ impl Character {
 
     #[must_use]
     pub fn player_name(&self) -> &str {
-        &self.player_name
+        &self.player.name()
     }
 
     #[must_use]
@@ -130,7 +132,9 @@ mod tests {
     #[test]
     #[ignore = "API changed"]
     fn _all_fields_present_to_build_character() -> Result<(), Box<dyn Error>> {
-        let result = Character::builder().build();
+        let mut builder = Character::builder();
+
+        let result = builder.clone().build();
         assert_eq!(
             result,
             Err(CharacterBuilderError::missing_fields(&[
@@ -145,7 +149,11 @@ mod tests {
             ]))
         );
 
-        let result = Character::builder().player_name("John Doe").build();
+        let john_doe = Player::builder().name("John Doe")?.build()?;
+
+        builder.player(john_doe.clone());
+
+        let result = builder.clone().build();
         assert_eq!(
             result,
             Err(CharacterBuilderError::missing_fields(&[
@@ -164,10 +172,9 @@ mod tests {
             ..Default::default()
         });
 
-        let result = Character::builder()
-            .player_name("John Doe")
-            .ancestry(human.clone())
-            .build();
+        builder.ancestry(human.clone());
+
+        let result = builder.clone().build();
         assert_eq!(
             result,
             Err(CharacterBuilderError::missing_fields(&[
@@ -201,14 +208,13 @@ mod tests {
             .intelligence(Attribute::default())
             .build()?;
 
-        let mut character = Character::builder()
-            .player_name("John Doe")
+        builder
             .character_name("Johannas Doeworth")
             .class(champion.clone())
             .ancestry(human.clone())
             .background(soldier.clone())
-            .attributes(attributes.clone())
-            .build()?;
+            .attributes(attributes.clone());
+        let mut character = builder.build()?;
 
         let char_id = Uuid::new_v4();
         character.id = char_id;
@@ -217,7 +223,7 @@ mod tests {
             character,
             Character {
                 id: char_id,
-                player_name: "John Doe".to_string(),
+                player: john_doe,
                 character_name: "Johannas Doeworth".to_string(),
                 class: champion,
                 ancestry: human,

@@ -1,9 +1,11 @@
 use std::error::Error;
 
-use mellon_book::dc20::*;
+use mellon_book::{dc20::*, player::Player};
 use uuid::Uuid;
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let spencer = Player::builder().name("Spencer")?.build()?;
+
     let unkillable = AncestryTrait {
         uuid: Uuid::new_v4(),
         name: "Unkillable".into(),
@@ -35,7 +37,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     .build()?;
 
     let character = CharacterBuilder::default()
-        .player_name("Spencer")
+        .player(spencer)
         .character_name("Cygnus")
         .class(ClassEntry {
             combat_style: vec![CombatStyle::default_spellcasting()],
