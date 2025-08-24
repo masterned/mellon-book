@@ -15,8 +15,6 @@ pub struct Character {
     #[builder(default)]
     level: Level,
     attributes: Attributes,
-    physical_defense: Defense,
-    mystical_defense: Defense,
 }
 
 impl Character {
@@ -61,13 +59,29 @@ impl Character {
     }
 
     #[must_use]
-    pub fn physical_defense(&self) -> &Defense {
-        &self.physical_defense
+    pub fn precision_defense(&self) -> Defense {
+        let combat_mastery = self.level.calc_combat_mastery();
+
+        let agility = self.attributes.agility().base_score as usize;
+        let intelligence = self.attributes.intelligence().base_score as usize;
+
+        Defense {
+            score: 8 + combat_mastery + agility + intelligence,
+            reduction: 0,
+        }
     }
 
     #[must_use]
-    pub fn mystical_defense(&self) -> &Defense {
-        &self.mystical_defense
+    pub fn area_defense(&self) -> Defense {
+        let combat_mastery = self.level.calc_combat_mastery();
+
+        let might = self.attributes.might().base_score as usize;
+        let charisma = self.attributes.might().base_score as usize;
+
+        Defense {
+            score: 8 + combat_mastery + might + charisma,
+            reduction: 0,
+        }
     }
 }
 
@@ -87,9 +101,8 @@ impl Default for Level {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Defense {
-    pub name: String,
     pub score: usize,
     pub reduction: usize,
 }
@@ -195,16 +208,6 @@ mod tests {
             .ancestry(human.clone())
             .background(soldier.clone())
             .attributes(attributes.clone())
-            .physical_defense(Defense {
-                name: "Physical Defense".into(),
-                score: 10,
-                reduction: 0,
-            })
-            .mystical_defense(Defense {
-                name: "Mystical Defense".into(),
-                score: 10,
-                reduction: 0,
-            })
             .build()?;
 
         let char_id = Uuid::new_v4();
@@ -221,16 +224,6 @@ mod tests {
                 background: soldier,
                 level: Level::default(),
                 attributes,
-                physical_defense: Defense {
-                    name: "Physical Defense".to_string(),
-                    score: 10,
-                    reduction: 0
-                },
-                mystical_defense: Defense {
-                    name: "Mystical Defense".to_string(),
-                    score: 10,
-                    reduction: 0
-                }
             }
         );
 

@@ -76,19 +76,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .intelligence(Attribute::new().with_base_score(3).with_save_proficiency())
                 .build()?,
         )
-        .physical_defense(Defense {
-            name: "Physical Defense".into(),
-            score: 10,
-            reduction: 0,
-        })
-        .mystical_defense(Defense {
-            name: "Mystical Defense".into(),
-            score: 10,
-            reduction: 0,
-        })
         .build()?;
 
     println!("{character:#?}");
+
+    println!("PD: {:#?}", character.precision_defense());
+    println!("AD: {:#?}", character.area_defense());
 
     Ok(())
 }
