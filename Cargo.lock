@@ -533,8 +533,8 @@ dependencies = [
 
 [[package]]
 name = "turann"
-version = "1.0.0"
-source = "git+https://github.com/masterned/turann.git?tag=v1.0.0#4fff3f7437777804edc1d0f38a6a50db0de38d69"
+version = "1.1.0"
+source = "git+https://github.com/masterned/turann.git?tag=v1.1.0#d55513118e28ef98e7c960f2219dffb0444f43d6"
 dependencies = [
  "proc-macro2",
  "quote",
