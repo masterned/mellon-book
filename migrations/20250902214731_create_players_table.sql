@@ -1,5 +1,0 @@
-CREATE TABLE players (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    uuid BLOB UNIQUE,
-    name TEXT NOT NULL
-);
