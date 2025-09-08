@@ -34,35 +34,15 @@ async fn main() -> anyhow::Result<()> {
         }
     };
 
-    let unkillable = AncestryTrait {
-        uuid: Uuid::new_v4(),
-        name: "Unkillable".into(),
-        cost: 0,
-        description: "Gives advantage on death saves".into(),
-    };
-    let human = AncestryInstanceBuilder::from(AncestryEntry {
-        uuid: Uuid::new_v4(),
-        name: "Human".into(),
-        description: "Versatile but milktoast".into(),
-        available_traits: vec![unkillable.clone()],
-    })
-    .add_ancestry_trait(unkillable)?
-    .build()?;
+    let human_uuid = Uuid::from_str("0199366d-d88f-7944-b173-c75f6cd2c5c3")?;
+    let human = Ancestry::builder().id(human_uuid).name("Human").build()?;
+    human.clone().save(&pool).await?;
 
-    let psy_trait = AncestryTrait {
-        uuid: Uuid::new_v4(),
-        cost: 5,
-        ..Default::default()
-    };
-
-    let psyborn = AncestryInstanceBuilder::from(AncestryEntry {
-        uuid: Uuid::new_v4(),
-        name: "Psyborn".into(),
-        description: "Totally not a mindflayer... promise...".into(),
-        available_traits: vec![psy_trait.clone()],
-    })
-    .add_ancestry_trait(psy_trait)?
-    .build()?;
+    let undying = AncestryTrait::builder()
+        .name("Undying")
+        .description("You have ADV on Saves against the Doomed Condition")
+        .cost(0 as i8)
+        .build()?;
 
     let character = CharacterBuilder::default()
         .player(spencer)
@@ -76,7 +56,8 @@ async fn main() -> anyhow::Result<()> {
             ],
             ..ClassEntry::new("Sorcerer")
         })
-        .ancestry(Origin::HybridBred(human, psyborn))
+        .ancestry(human)
+        .ancestry_trait(undying)
         .background(
             Background::builder()
                 .name("Bounty Hunter")?

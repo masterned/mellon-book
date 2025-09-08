@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::player::Player;
 
-use super::{Attributes, Background, ClassEntry, Origin};
+use super::{Ancestry, AncestryTrait, Attributes, Background, ClassEntry};
 
 #[derive(Builder, Clone, Debug, PartialEq)]
 pub struct Character {
@@ -12,7 +12,10 @@ pub struct Character {
     player: Player,
     character_name: String,
     class: ClassEntry,
-    ancestry: Origin,
+    #[builder(each = "ancestry")]
+    ancestries: Vec<Ancestry>,
+    #[builder(each = "ancestry_trait")]
+    ancestry_traits: Vec<AncestryTrait>,
     background: Background,
     #[builder(default)]
     level: Level,
@@ -41,8 +44,8 @@ impl Character {
     }
 
     #[must_use]
-    pub fn ancestry(&self) -> &Origin {
-        &self.ancestry
+    pub fn ancestries(&self) -> &[Ancestry] {
+        &self.ancestries
     }
 
     #[must_use]
@@ -167,10 +170,7 @@ mod tests {
             ]))
         );
 
-        let human = Origin::PureBred(AncestryInstance {
-            name: "Human".into(),
-            ..Default::default()
-        });
+        let human = Ancestry::builder().name("Human").build()?;
 
         builder.ancestry(human.clone());
 
@@ -226,7 +226,8 @@ mod tests {
                 player: john_doe,
                 character_name: "Johannas Doeworth".to_string(),
                 class: champion,
-                ancestry: human,
+                ancestries: vec![human],
+                ancestry_traits: vec![],
                 background: soldier,
                 level: Level::default(),
                 attributes,

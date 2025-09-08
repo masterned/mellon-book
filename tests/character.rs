@@ -1,32 +1,18 @@
 use std::error::Error;
 
 use mellon_book::{dc20::*, player::Player};
-use uuid::Uuid;
 
 #[test]
 fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
     let player = Player::builder().name("Test Player")?.build()?;
 
-    let unkillable = AncestryTrait {
-        uuid: Uuid::new_v4(),
-        name: "Unkillable".into(),
-        cost: 0,
-        description: "Gives advantage on death saves".into(),
-    };
-    let human = AncestryInstanceBuilder::from(AncestryEntry {
-        uuid: Uuid::new_v4(),
-        name: "Human".into(),
-        description: "Versatile but milktoast".into(),
-        available_traits: vec![unkillable.clone()],
-    })
-    .add_ancestry_trait(unkillable)?
-    .build()?;
+    let human = Ancestry::builder().name("Human").build()?;
 
     let test_character = Character::builder()
         .player(player)
         .character_name("Test Name")
         .class(ClassEntry::new("Champion"))
-        .ancestry(Origin::PureBred(human))
+        .ancestry(human)
         .background(
             Background::builder()
                 .name("Soldier")?
