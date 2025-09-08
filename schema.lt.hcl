@@ -47,6 +47,9 @@ table "players" {
   primary_key {
     columns = [column.id]
   }
+  check "16 byte uuid" {
+    expr = "length(uuid) = 16"
+  }
   index "players_uuid_uniq" {
     unique  = true
     columns = [column.uuid]
@@ -80,6 +83,9 @@ table "characters" {
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
+  check "16 byte uuid" {
+    expr = "length(uuid) = 16"
+  }
   index "characters_uuid_uniq" {
     unique  = true
     columns = [column.uuid]
@@ -102,6 +108,9 @@ table "ancestries" {
   }
   primary_key {
     columns = [column.id]
+  }
+  check "16 byte uuid" {
+    expr = "length(uuid) = 16"
   }
   index "ancestries_uuid_uniq" {
     unique  = true
@@ -133,6 +142,9 @@ table "ancestry_traits" {
   }
   primary_key {
     columns = [column.id]
+  }
+  check "16 byte uuid" {
+    expr = "length(uuid) = 16"
   }
   index "ancestry_traits_uuid_uniq" {
     unique  = true
@@ -189,6 +201,9 @@ table "character_levels" {
     ref_columns = [table.characters.column.id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
+  }
+  check "16 byte uuid" {
+    expr = "length(uuid) = 16"
   }
   index "character_levels_uuid_uniq" {
     unique  = true
