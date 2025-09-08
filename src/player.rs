@@ -23,6 +23,43 @@ pub struct Player {
 }
 
 impl Player {
+    pub async fn get_player_by_uuid(pool: &sqlx::SqlitePool, uuid: Uuid) -> anyhow::Result<Player> {
+        let result = sqlx::query_as!(
+            Player,
+            r#"
+                SELECT uuid as "uuid: Uuid", name
+                FROM players
+                WHERE uuid = ?
+                LIMIT 1
+            "#,
+            uuid
+        )
+        .fetch_one(pool)
+        .await?;
+
+        Ok(result)
+    }
+
+    pub async fn save(self, pool: &sqlx::SqlitePool) -> anyhow::Result<i64> {
+        let mut conn = pool.acquire().await?;
+
+        let Player { uuid, name } = self;
+
+        let id = sqlx::query!(
+            r#"
+                INSERT INTO players (`uuid`, `name`)
+                VALUES ( ?, ? );
+            "#,
+            uuid,
+            name
+        )
+        .execute(&mut *conn)
+        .await?
+        .last_insert_rowid();
+
+        Ok(id)
+    }
+
     pub fn uuid(&self) -> &Uuid {
         &self.uuid
     }

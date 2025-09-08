@@ -1,10 +1,38 @@
-use std::error::Error;
+use std::str::FromStr;
 
 use mellon_book::{dc20::*, player::Player};
+use sqlx::sqlite::SqlitePool;
 use uuid::Uuid;
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let spencer = Player::builder().name("Spencer")?.build()?;
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> anyhow::Result<()> {
+    let pool = SqlitePool::connect(&std::env::var("DATABASE_URL")?).await?;
+
+    let player_uuid = Uuid::from_str("01991836ac9f75898eff73915fd87018").unwrap();
+
+    let (secs, nsecs) = player_uuid.get_timestamp().unwrap().to_unix();
+    let timestamp = chrono::DateTime::from_timestamp(secs as i64, nsecs);
+    println!("{timestamp:#?}");
+
+    let spencer = match Player::get_player_by_uuid(&pool, player_uuid).await {
+        Ok(player) => player,
+        Err(error) => {
+            eprintln!("{error:#?}");
+
+            println!("inserting player into table");
+
+            let player = Player::builder()
+                .uuid(player_uuid)
+                .name("Spencer Dent")?
+                .build()?;
+
+            let id = player.clone().save(&pool).await?;
+
+            println!("new player id: {id}");
+
+            player
+        }
+    };
 
     let unkillable = AncestryTrait {
         uuid: Uuid::new_v4(),
