@@ -21,7 +21,7 @@ CREATE UNIQUE INDEX `ancestry_traits_uuid_uniq`
 CREATE TABLE `ancestries_ancestry_traits` (
     `ancestry_id`       INTEGER NOT NULL,
     `ancestry_trait_id` INTEGER NOT NULL,
-    `expanded`          INTEGER NOT NULL DEFAULT 0,
+    `expanded`          BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT `ancestry_fk` FOREIGN KEY (`ancestry_id`)
         REFERENCES `ancestries` (`id`)
         ON UPDATE NO ACTION
