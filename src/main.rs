@@ -8,13 +8,13 @@ use uuid::Uuid;
 async fn main() -> anyhow::Result<()> {
     let pool = SqlitePool::connect(&std::env::var("DATABASE_URL")?).await?;
 
-    let player_uuid = Uuid::from_str("01991836ac9f75898eff73915fd87018").unwrap();
+    let player_id = Uuid::from_str("01991836ac9f75898eff73915fd87018").unwrap();
 
-    let (secs, nsecs) = player_uuid.get_timestamp().unwrap().to_unix();
+    let (secs, nsecs) = player_id.get_timestamp().unwrap().to_unix();
     let timestamp = chrono::DateTime::from_timestamp(secs as i64, nsecs);
     println!("{timestamp:#?}");
 
-    let spencer = match Player::get_player_by_uuid(&pool, player_uuid).await {
+    let spencer = match Player::get_player_by_uuid(&pool, player_id).await {
         Ok(player) => player,
         Err(error) => {
             eprintln!("{error:#?}");
@@ -22,7 +22,7 @@ async fn main() -> anyhow::Result<()> {
             println!("inserting player into table");
 
             let player = Player::builder()
-                .uuid(player_uuid)
+                .id(player_id)
                 .name("Spencer Dent")?
                 .build()?;
 

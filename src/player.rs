@@ -17,7 +17,7 @@ impl PlayerBuilder {
 #[derive(Builder, Clone, Debug, PartialEq)]
 pub struct Player {
     #[builder(default = Uuid::new_v4)]
-    uuid: Uuid,
+    id: Uuid,
     #[builder(validate = Self::validate_name)]
     name: String,
 }
@@ -27,9 +27,9 @@ impl Player {
         let result = sqlx::query_as!(
             Player,
             r#"
-                SELECT uuid as "uuid: Uuid", name
+                SELECT id as "id: Uuid", name
                 FROM players
-                WHERE uuid = ?
+                WHERE id = ?
                 LIMIT 1
             "#,
             uuid
@@ -43,14 +43,14 @@ impl Player {
     pub async fn save(self, pool: &sqlx::SqlitePool) -> anyhow::Result<i64> {
         let mut conn = pool.acquire().await?;
 
-        let Player { uuid, name } = self;
+        let Player { id, name } = self;
 
         let id = sqlx::query!(
             r#"
-                INSERT INTO players (`uuid`, `name`)
+                INSERT INTO players (`id`, `name`)
                 VALUES ( ?, ? );
             "#,
-            uuid,
+            id,
             name
         )
         .execute(&mut *conn)
@@ -60,8 +60,8 @@ impl Player {
         Ok(id)
     }
 
-    pub fn uuid(&self) -> &Uuid {
-        &self.uuid
+    pub fn id(&self) -> &Uuid {
+        &self.id
     }
 
     pub fn name(&self) -> &str {

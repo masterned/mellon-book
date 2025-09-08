@@ -32,11 +32,6 @@ table "_sqlx_migrations" {
 table "players" {
   schema = schema.main
   column "id" {
-    null           = false
-    type           = integer
-    auto_increment = true
-  }
-  column "uuid" {
     null = false
     type = blob
   }
@@ -48,21 +43,13 @@ table "players" {
     columns = [column.id]
   }
   check "16 byte uuid" {
-    expr = "length(uuid) = 16"
+    expr = "length(`id`) = 16"
   }
-  index "players_uuid_uniq" {
-    unique  = true
-    columns = [column.uuid]
-  }
+  without_rowid = true
 }
 table "characters" {
   schema = schema.main
   column "id" {
-    null           = false
-    type           = integer
-    auto_increment = true
-  }
-  column "uuid" {
     null = false
     type = blob
   }
@@ -72,7 +59,7 @@ table "characters" {
   }
   column "creator_id" {
     null = false
-    type = integer
+    type = blob
   }
   primary_key {
     columns = [column.id]
@@ -84,21 +71,13 @@ table "characters" {
     on_delete   = CASCADE
   }
   check "16 byte uuid" {
-    expr = "length(uuid) = 16"
+    expr = "length(`id`) = 16"
   }
-  index "characters_uuid_uniq" {
-    unique  = true
-    columns = [column.uuid]
-  }
+  without_rowid = true
 }
 table "ancestries" {
   schema = schema.main
   column "id" {
-    null           = false
-    type           = integer
-    auto_increment = true
-  }
-  column "uuid" {
     null = false
     type = blob
   }
@@ -110,21 +89,13 @@ table "ancestries" {
     columns = [column.id]
   }
   check "16 byte uuid" {
-    expr = "length(uuid) = 16"
+    expr = "length(`id`) = 16"
   }
-  index "ancestries_uuid_uniq" {
-    unique  = true
-    columns = [column.uuid]
-  }
+  without_rowid = true
 }
 table "ancestry_traits" {
   schema = schema.main
   column "id" {
-    null           = false
-    type           = integer
-    auto_increment = true
-  }
-  column "uuid" {
     null = false
     type = blob
   }
@@ -144,27 +115,27 @@ table "ancestry_traits" {
     columns = [column.id]
   }
   check "16 byte uuid" {
-    expr = "length(uuid) = 16"
+    expr = "length(`id`) = 16"
   }
-  index "ancestry_traits_uuid_uniq" {
-    unique  = true
-    columns = [column.uuid]
-  }
+  without_rowid = true
 }
 table "ancestries_ancestry_traits" {
   schema = schema.main
   column "ancestry_id" {
     null = false
-    type = integer
+    type = blob
   }
   column "ancestry_trait_id" {
     null = false
-    type = integer
+    type = blob
   }
   column "expanded" {
     null    = false
     type    = boolean
     default = false
+  }
+  primary_key {
+    columns = [column.ancestry_id, column.ancestry_trait_id]
   }
   foreign_key "ancestry_trait_fk" {
     columns     = [column.ancestry_trait_id]
@@ -181,20 +152,20 @@ table "ancestries_ancestry_traits" {
 }
 table "character_levels" {
   schema = schema.main
+  column "id" {
+    null = false
+    type = blob
+  }
   column "character_id" {
     null = false
-    type = integer
+    type = blob
   }
   column "level" {
     null = false
     type = integer
   }
-  column "uuid" {
-    null = false
-    type = blob
-  }
   primary_key {
-    columns = [column.character_id, column.level]
+    columns = [column.id]
   }
   foreign_key "character_fk" {
     columns     = [column.character_id]
@@ -203,30 +174,27 @@ table "character_levels" {
     on_delete   = CASCADE
   }
   check "16 byte uuid" {
-    expr = "length(uuid) = 16"
+    expr = "length(`id`) = 16"
   }
-  index "character_levels_uuid_uniq" {
+  index "character_levels_character_level_uniq" {
     unique  = true
-    columns = [column.uuid]
+    columns = [column.character_id, column.level]
   }
+  without_rowid = true
 }
 table "ancestry_traits_character_levels" {
   schema = schema.main
   column "ancestry_trait_id" {
     null = false
-    type = integer
+    type = blob
   }
-  column "character_id" {
+  column "character_level_id" {
     null = false
-    type = integer
-  }
-  column "level" {
-    null = false
-    type = integer
+    type = blob
   }
   foreign_key "character_level_fk" {
-    columns     = [column.character_id, column.level]
-    ref_columns = [table.character_levels.column.character_id, table.character_levels.column.level]
+    columns     = [column.character_level_id]
+    ref_columns = [table.character_levels.column.id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
@@ -241,11 +209,11 @@ table "ancestries_characters" {
   schema = schema.main
   column "ancestry_id" {
     null = false
-    type = integer
+    type = blob
   }
   column "character_id" {
     null = false
-    type = integer
+    type = blob
   }
   foreign_key "character_fk" {
     columns     = [column.character_id]
