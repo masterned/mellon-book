@@ -14,25 +14,11 @@ async fn main() -> anyhow::Result<()> {
     let timestamp = chrono::DateTime::from_timestamp(secs as i64, nsecs);
     println!("{timestamp:#?}");
 
-    let spencer = match Player::get_player_by_uuid(&pool, player_id).await {
-        Ok(player) => player,
-        Err(error) => {
-            eprintln!("{error:#?}");
-
-            println!("inserting player into table");
-
-            let player = Player::builder()
-                .id(player_id)
-                .name("Spencer Dent")?
-                .build()?;
-
-            let id = player.clone().save(&pool).await?;
-
-            println!("new player id: {id}");
-
-            player
-        }
-    };
+    let spencer = Player::builder()
+        .id(player_id)
+        .name("Spencer Dent")?
+        .build()?;
+    spencer.clone().save(&pool).await?;
 
     let human_uuid = Uuid::from_str("0199366d-d88f-7944-b173-c75f6cd2c5c3")?;
     let human = Ancestry::builder().id(human_uuid).name("Human").build()?;

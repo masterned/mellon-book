@@ -23,7 +23,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub async fn get_player_by_uuid(pool: &sqlx::SqlitePool, uuid: Uuid) -> anyhow::Result<Player> {
+    pub async fn load(pool: &sqlx::SqlitePool, uuid: Uuid) -> anyhow::Result<Player> {
         let result = sqlx::query_as!(
             Player,
             r#"
@@ -48,7 +48,9 @@ impl Player {
         let id = sqlx::query!(
             r#"
                 INSERT INTO players (`id`, `name`)
-                VALUES ( ?, ? );
+                VALUES ( ?1, ?2 )
+                ON CONFLICT(`id`) DO UPDATE SET
+                    name = ?2;
             "#,
             id,
             name
