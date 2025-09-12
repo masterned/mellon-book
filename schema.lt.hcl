@@ -228,5 +228,53 @@ table "ancestries_characters" {
     on_delete   = CASCADE
   }
 }
+table "attributes" {
+  schema = schema.main
+  column "id" {
+    type = blob
+    null = false
+  }
+  column "name" {
+    type = text
+    null = false
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  check "16 byte id" {
+    expr = "length(`id`) = 16"
+  }
+}
+table "skills" {
+  schema = schema.main
+  column "id" {
+    type = blob
+    null = false
+  }
+  column "name" {
+    type = text
+    null = false
+  }
+  column "attribute_id" {
+    type = blob
+    null = false
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  foreign_key "attribute_fk" {
+    columns = [column.attribute_id]
+    ref_columns = [table.attributes.column.id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  check "16 byte id" {
+    expr = "length(`id`) = 16"
+  }
+  check "16 byte attribute_id" {
+    expr = "length(`attribute_id`) = 16"
+  }
+  without_rowid = true
+}
 schema "main" {
 }
