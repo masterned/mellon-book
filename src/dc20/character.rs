@@ -197,12 +197,7 @@ mod tests {
                     .attribute_id(uuid::Uuid::default())
                     .build()?,
             )
-            .trade(
-                Trade::builder()
-                    .name("Blacksmithing")
-                    .attribute_id(uuid::Uuid::default())
-                    .build()?,
-            )
+            .trade(Trade::builder().name("Blacksmithing").build()?)
             .language_fluency(LanguageFluency::common())
             .build()?;
 

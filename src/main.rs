@@ -50,12 +50,7 @@ async fn main() -> anyhow::Result<()> {
             Background::builder()
                 .name("Bounty Hunter")?
                 .skill(awareness)
-                .trade(
-                    Trade::builder()
-                        .name("Engineering")
-                        .attribute_id(uuid::Uuid::from_u128(0x01993b8556b4774aa4a333bd7f76469e))
-                        .build()?,
-                )
+                .trade(Trade::builder().name("Engineering").build()?)
                 .language_fluency(LanguageFluency::common())
                 .build()?,
         )

@@ -5,7 +5,6 @@ pub struct Trade {
     #[builder(default = uuid::Uuid::now_v7)]
     pub id: uuid::Uuid,
     pub name: String,
-    pub attribute_id: uuid::Uuid,
 }
 
 impl Trade {
@@ -15,8 +14,7 @@ impl Trade {
             r#"
                 SELECT
                     `id` AS "id: uuid::Uuid",
-                    `name`,
-                    `attribute_id` AS "attribute_id: uuid::Uuid"
+                    `name`
                 FROM `trades`
                 WHERE `id` = ?1
                 LIMIT 1;
@@ -30,23 +28,18 @@ impl Trade {
     pub async fn save(self, pool: &sqlx::SqlitePool) -> sqlx::Result<()> {
         let mut conn = pool.acquire().await?;
 
-        let Trade {
-            id,
-            name,
-            attribute_id,
-        } = self;
+        let Trade { id, name } = self;
 
         sqlx::query!(
             r#"
-                INSERT INTO trades (`id`, `name`, `attribute_id`)
-                VALUES ( ?1, ?2, ?3 )
+                INSERT INTO trades (`id`, `name`)
+                VALUES ( ?1, ?2 )
                 ON CONFLICT(`id`) DO UPDATE SET
-                    name = ?2,
-                    attribute_id = ?3;
+                    name = ?2
+                ;
             "#,
             id,
             name,
-            attribute_id
         )
         .execute(&mut *conn)
         .await?;

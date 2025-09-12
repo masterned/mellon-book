@@ -286,12 +286,26 @@ table "trades" {
     type = text
     null = false
   }
+  primary_key {
+    columns = [column.id]
+  }
+  check "16 byte id" {
+    expr = "length(`id`) = 16"
+  }
+  without_rowid = true
+}
+table "attributes_trades" {
+  schema = schema.main
   column "attribute_id" {
     type = blob
     null = false
   }
+  column "trade_id" {
+    type = blob
+    null = false
+  }
   primary_key {
-    columns = [column.id]
+    columns = [column.attribute_id, column.trade_id]
   }
   foreign_key "attribute_fk" {
     columns = [column.attribute_id]
@@ -299,13 +313,18 @@ table "trades" {
     on_update = NO_ACTION
     on_delete = CASCADE
   }
-  check "16 byte id" {
-    expr = "length(`id`) = 16"
+  foreign_key "trade_fk" {
+    columns = [column.trade_id]
+    ref_columns = [table.trades.column.id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
   }
   check "16 byte attribute_id" {
     expr = "length(`attribute_id`) = 16"
   }
-  without_rowid = true
+  check "16 byte trade_id" {
+    expr = "length(`trade_id`) = 16"
+  }
 }
 schema "main" {
 }
