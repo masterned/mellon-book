@@ -30,6 +30,8 @@ async fn main() -> anyhow::Result<()> {
         .cost(0 as i8)
         .build()?;
 
+    let awareness = Skill::load(&pool, Uuid::from_u128(0x01993a736a8577e183451a57d7c324de)).await?;
+
     let character = CharacterBuilder::default()
         .player(spencer)
         .character_name("Cygnus")
@@ -47,30 +49,39 @@ async fn main() -> anyhow::Result<()> {
         .background(
             Background::builder()
                 .name("Bounty Hunter")?
-                .trade(Skill::new("Engineering").with_mastery(Mastery::Novice))
-                .skill(Skill::new("Perception").with_mastery(Mastery::Novice))
+                .skill(awareness)
+                .trade(
+                    Skill::builder()
+                        .name("Engineering")
+                        .attribute_id(uuid::Uuid::from_u128(0x01993b8556b4774aa4a333bd7f76469e))
+                        .build()?,
+                )
                 .language_fluency(LanguageFluency::common())
                 .build()?,
         )
         .attributes(
             Attributes::builder()
-                .prime(Attribute {
+                .prime(AttributeLevel {
                     base_score: 4,
                     save_proficiency: false,
                     skills: vec![],
                 })
-                .might(Attribute {
+                .might(AttributeLevel {
                     base_score: 0,
                     save_proficiency: false,
                     skills: vec![],
                 })
-                .agility(Attribute {
+                .agility(AttributeLevel {
                     base_score: 1,
                     save_proficiency: true,
                     skills: vec![],
                 })
-                .charisma(Attribute::new().with_base_score(0))
-                .intelligence(Attribute::new().with_base_score(3).with_save_proficiency())
+                .charisma(AttributeLevel::new().with_base_score(0))
+                .intelligence(
+                    AttributeLevel::new()
+                        .with_base_score(3)
+                        .with_save_proficiency(),
+                )
                 .build()?,
         )
         .build()?;

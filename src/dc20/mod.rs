@@ -6,6 +6,8 @@ pub mod class;
 pub mod item;
 pub mod language;
 pub mod maneuver;
+pub mod mastery;
+pub mod skill;
 pub mod spell;
 
 pub use ancestry::*;
@@ -16,4 +18,6 @@ pub use class::*;
 pub use item::*;
 pub use language::*;
 pub use maneuver::*;
+pub use mastery::*;
+pub use skill::*;
 pub use spell::*;

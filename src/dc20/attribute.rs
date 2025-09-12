@@ -1,9 +1,53 @@
 use std::{error::Error, fmt, str::FromStr};
 
 use turann::Builder;
-use uuid::Uuid;
 
-use super::Level;
+use crate::dc20::{Level, Skill};
+
+#[derive(Builder, Debug, Clone, PartialEq, Eq)]
+pub struct Attribute {
+    pub id: uuid::Uuid,
+    pub name: String,
+}
+
+impl Attribute {
+    pub async fn load(pool: &sqlx::SqlitePool, id: uuid::Uuid) -> sqlx::Result<Attribute> {
+        sqlx::query_as!(
+            Attribute,
+            r#"
+                SELECT `id` AS "id: uuid::Uuid", `name`
+                FROM attributes 
+                WHERE `id` = ?
+                LIMIT 1;
+            "#,
+            id
+        )
+        .fetch_one(pool)
+        .await
+    }
+
+    pub async fn save(self, pool: &sqlx::SqlitePool) -> sqlx::Result<()> {
+        let mut conn = pool.acquire().await?;
+
+        let Attribute { id, name } = self;
+
+        sqlx::query!(
+            r#"
+                INSERT INTO `attributes` VALUES
+                (?1, ?2)
+                ON CONFLICT (`id`) DO UPDATE
+                    SET `name` = ?2
+                ;
+            "#,
+            id,
+            name
+        )
+        .execute(&mut *conn)
+        .await?;
+
+        Ok(())
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum AttributeName {
@@ -46,56 +90,47 @@ impl FromStr for AttributeName {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Mastery {
-    Novice = 2,
-    Adept = 4,
-    Expert = 6,
-    Master = 8,
-    GrandMaster = 10,
-}
-
 #[derive(Builder, Clone, Debug, PartialEq)]
 pub struct Attributes {
-    prime: Attribute,
-    might: Attribute,
-    agility: Attribute,
-    charisma: Attribute,
-    intelligence: Attribute,
+    prime: AttributeLevel,
+    might: AttributeLevel,
+    agility: AttributeLevel,
+    charisma: AttributeLevel,
+    intelligence: AttributeLevel,
 }
 
 impl Attributes {
-    pub fn prime(&self) -> &Attribute {
+    pub fn prime(&self) -> &AttributeLevel {
         &self.prime
     }
 
-    pub fn might(&self) -> &Attribute {
+    pub fn might(&self) -> &AttributeLevel {
         &self.might
     }
 
-    pub fn agility(&self) -> &Attribute {
+    pub fn agility(&self) -> &AttributeLevel {
         &self.agility
     }
 
-    pub fn charisma(&self) -> &Attribute {
+    pub fn charisma(&self) -> &AttributeLevel {
         &self.charisma
     }
 
-    pub fn intelligence(&self) -> &Attribute {
+    pub fn intelligence(&self) -> &AttributeLevel {
         &self.intelligence
     }
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct Attribute {
+pub struct AttributeLevel {
     pub base_score: isize,
     pub save_proficiency: bool,
     pub skills: Vec<Skill>,
 }
 
-impl Attribute {
+impl AttributeLevel {
     pub fn new() -> Self {
-        Attribute::default()
+        AttributeLevel::default()
     }
 
     pub fn with_base_score(mut self, score: isize) -> Self {
@@ -128,49 +163,13 @@ impl Attribute {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct Skill {
-    pub uuid: Uuid,
-    pub name: String,
-    pub mastery: Option<Mastery>,
-}
-
-impl Skill {
-    pub fn new(name: impl Into<String>) -> Self {
-        Skill {
-            uuid: Uuid::new_v4(),
-            name: name.into(),
-            mastery: None,
-        }
-    }
-
-    pub fn set_mastery(&mut self, mastery: Mastery) {
-        let _ = self.mastery.insert(mastery);
-    }
-
-    pub fn with_mastery(mut self, mastery: Mastery) -> Self {
-        self.set_mastery(mastery);
-
-        self
-    }
-
-    #[must_use]
-    pub fn calc_score(&self, attribute: &Attribute) -> isize {
-        if let Some(mastery) = self.mastery {
-            mastery as isize + attribute.base_score
-        } else {
-            attribute.base_score
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn _attribute_without_save_mastery_should_have_save_of_attribute_score() {
-        let attribute = Attribute {
+        let attribute = AttributeLevel {
             base_score: 3,
             save_proficiency: false,
             skills: vec![],
@@ -181,7 +180,7 @@ mod tests {
 
     #[test]
     fn _attribute_with_save_mastery_should_add_combat_mastery_to_save() {
-        let attribute = Attribute {
+        let attribute = AttributeLevel {
             base_score: 3,
             save_proficiency: true,
             skills: vec![],
@@ -193,35 +192,5 @@ mod tests {
             attribute.calc_save(level),
             attribute.base_score + combat_mastery
         )
-    }
-
-    mod skill {
-        use super::*;
-
-        #[test]
-        fn _skill_without_mastery_should_have_same_score_as_attribute() {
-            let skill = Skill::new("Test Skill");
-            let attribute = Attribute {
-                base_score: 3,
-                save_proficiency: true,
-                skills: vec![skill.clone()],
-            };
-
-            assert_eq!(skill.calc_score(&attribute), attribute.base_score);
-        }
-
-        #[test]
-        fn _skill_with_mastery_should_add_mastery_value_to_score() {
-            let mut skill = Skill::new("Test Skill");
-            skill.set_mastery(Mastery::Novice);
-
-            let attribute = Attribute {
-                base_score: 3,
-                save_proficiency: true,
-                skills: vec![skill.clone()],
-            };
-
-            assert_eq!(skill.calc_score(&attribute), attribute.base_score + 2);
-        }
     }
 }

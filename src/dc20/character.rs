@@ -191,21 +191,21 @@ mod tests {
 
         let soldier = Background::builder()
             .name("Soldier")?
-            .skill(Skill::new("Athletics"))
-            .trade(Skill::new("Blacksmithing"))
+            .skill(Skill::builder().name("Athletics").build()?)
+            .trade(Skill::builder().name("Blacksmithing").build()?)
             .language_fluency(LanguageFluency::common())
             .build()?;
 
         let attributes = Attributes::builder()
             .prime(
-                Attribute::new()
+                AttributeLevel::new()
                     .with_base_score(3)
-                    .with_skill(Skill::new("Perception").with_mastery(Mastery::Novice)),
+                    .with_skill(Skill::builder().name("Perception").build()?),
             )
-            .might(Attribute::default())
-            .agility(Attribute::default())
-            .charisma(Attribute::default())
-            .intelligence(Attribute::default())
+            .might(AttributeLevel::default())
+            .agility(AttributeLevel::default())
+            .charisma(AttributeLevel::default())
+            .intelligence(AttributeLevel::default())
             .build()?;
 
         builder
