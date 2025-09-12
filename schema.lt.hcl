@@ -348,5 +348,147 @@ table "masteries" {
   }
   without_rowid = true
 }
+table "languages" {
+  schema = schema.main
+  column "id" {
+    type = blob
+    null = false
+  }
+  column "name" {
+    type = text
+    null = false
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  check "16 byte id" {
+    expr = "length(`id`) = 16"
+  }
+  without_rowid = true
+}
+table "backgrounds" {
+  schema = schema.main
+  column "id" {
+    type = blob
+    null = false
+  }
+  column "name" {
+    type = text
+    null = false
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  check "16 byte id" {
+    expr = "length(`id`) = 16"
+  }
+  without_rowid = true
+}
+table "backgrounds_languages" {
+  schema = schema.main
+  column "background_id" {
+    type = blob
+    null = false
+  }
+  column "language_id" {
+    type = blob
+    null = false
+  }
+  column "fluency" {
+    type = integer
+    null = false
+  }
+  primary_key {
+    columns = [column.background_id, column.language_id]
+  }
+  foreign_key "background_fk" {
+    columns = [column.background_id]
+    ref_columns = [table.backgrounds.column.id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  foreign_key "language_fk" {
+    columns = [column.language_id]
+    ref_columns = [table.languages.column.id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  check "16 byte background_id" {
+    expr = "length(`background_id`) = 16"
+  }
+  check "16 byte language_id" {
+    expr = "length(`language_id`) = 16"
+  }
+  check "enum fluency" {
+    expr = "`fluency` in (1, 2)"
+  }
+  without_rowid = true
+}
+table "backgrounds_skills" {
+  schema = schema.main
+  column "background_id" {
+    type = blob
+    null = false
+  }
+  column "skill_id" {
+    type = blob
+    null = false
+  }
+  primary_key {
+    columns = [column.background_id, column.skill_id]
+  }
+  foreign_key "background_fk" {
+    columns = [column.background_id]
+    ref_columns = [table.backgrounds.column.id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  foreign_key "skill_fk" {
+    columns = [column.skill_id]
+    ref_columns = [table.skills.column.id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  check "16 byte background_id" {
+    expr = "length(`background_id`) = 16"
+  }
+  check "16 byte skill_id" {
+    expr = "length(`skill_id`) = 16"
+  }
+  without_rowid = true
+}
+table "backgrounds_trades" {
+  schema = schema.main
+  column "background_id" {
+    type = blob
+    null = false
+  }
+  column "trade_id" {
+    type = blob
+    null = false
+  }
+  primary_key {
+    columns = [column.background_id, column.trade_id]
+  }
+  foreign_key "background_fk" {
+    columns = [column.background_id]
+    ref_columns = [table.backgrounds.column.id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  foreign_key "trade_fk" {
+    columns = [column.trade_id]
+    ref_columns = [table.trades.column.id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  check "16 byte background_id" {
+    expr = "length(`background_id`) = 16"
+  }
+  check "16 byte trade_id" {
+    expr = "length(`trade_id`) = 16"
+  }
+  without_rowid = true
+}
 schema "main" {
 }

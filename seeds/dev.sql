@@ -39,6 +39,12 @@ VALUES (X'01993a736a8577e183451a57d7c324de', "Awareness", X'01993b832d6c7e7882b2
 , (X'01993b8e7add7d34a04620c11a889327', "Acrobatics", X'01993b8460827289a9e9cc105341940e')
 , (X'01993b8ec8397c0fa20d9b17738aaf63', "Trickery", X'01993b8460827289a9e9cc105341940e')
 , (X'01993b8efd737f49a1c955f3e11f885c', "Stealth", X'01993b8460827289a9e9cc105341940e')
+, (X'01993ea183e17b82b3092a188fb6afda', "Animal", X'01993b8460827289a9e9cc105341940e')
+, (X'01993ea1a9457087b8e568454a0bdadb', "Influence", X'01993b8460827289a9e9cc105341940e')
+, (X'01993ea22e1a7d29952eedc454fa9f95', "Insight", X'01993b8460827289a9e9cc105341940e')
+, (X'01993ea24cee74f9a1e9c9d10269ac62', "Investigation", X'01993b8460827289a9e9cc105341940e')
+, (X'01993ea27be07dbbbb8c2a79be9df862', "Medicine", X'01993b8460827289a9e9cc105341940e')
+, (X'01993ea29d2c70f9bc47df7378496cd0', "Survival", X'01993b8460827289a9e9cc105341940e')
 ON CONFLICT (`id`) DO NOTHING
 ;
 
@@ -93,4 +99,46 @@ VALUES (X'01993c50621f720b98cc90eed9ddddea', "Novice", 2)
 , (X'01993c50d7297fed893796dc5e928c04', "Master", 8)
 , (X'01993c50ed66774d913ae96abef0b500', "Grandmaster", 10)
 ON CONFLICT (`id`) DO NOTHING
+;
+
+INSERT INTO `languages`
+VALUES (X'01993e35ae3470bfb26e86f39c6b8d85', "Common")
+, (X'01993e35e4347c668b34a759162219d0', "Common Sign")
+, (X'01993e7fe3ef751ea7ebd2208a30435b', "Human")
+, (X'01993e80e761757c812cfec2e5ddedf1', "Dwarven")
+, (X'01993e8203ef7d83861bf41cca36819e', "Elvish")
+, (X'01993e9bde6070a6ab380a2c3f9f023f', "Gnomish")
+, (X'01993e9c3c32767bb5cd8d552a436565', "Halfling")
+, (X'01993e9cec66705c85350544dc0878d4', "Orcish")
+, (X'01993e9d061b74958eb960e2d3f9caa0', "Giant")
+, (X'01993e9d1cba7e3b9eeb1ee7b3688c5f', "Draconic")
+, (X'01993e9d37657a6f9adab7074e9f48b1', "Fey")
+, (X'01993e9d44c8716f95bdb8cecb2b0098', "Elemental")
+, (X'01993e9d5249721a93806cb086147cd9', "Celestial")
+, (X'01993e9d6d2d7b6dbff04da13988d0fe', "Fiend")
+, (X'01993e9d811f7c78b349e1b19561c220', "Deep Speech")
+ON CONFLICT (`id`) DO NOTHING
+;
+
+INSERT INTO `backgrounds`
+VALUES (X'01993ea09d21764d9a0b98bb22b619ca', "Human Mercenary")
+ON CONFLICT (`id`) DO NOTHING
+;
+
+INSERT INTO `backgrounds_languages`
+VALUES (X'01993ea09d21764d9a0b98bb22b619ca', X'01993e35ae3470bfb26e86f39c6b8d85', 2)
+, (X'01993ea09d21764d9a0b98bb22b619ca', X'01993e7fe3ef751ea7ebd2208a30435b', 2)
+ON CONFLICT (`background_id`, `language_id`) DO NOTHING
+;
+
+INSERT INTO `backgrounds_skills`
+VALUES (X'01993ea09d21764d9a0b98bb22b619ca', X'01993a736a8577e183451a57d7c324de')
+, (X'01993ea09d21764d9a0b98bb22b619ca', X'01993b89eb9d7d71a9481f5dd0e6dd82')
+ON CONFLICT (`background_id`, `skill_id`) DO NOTHING
+;
+
+INSERT INTO `backgrounds_trades`
+VALUES (X'01993ea09d21764d9a0b98bb22b619ca', X'01993c624f007611b33b6c5bfc97872c') -- Human Mercenery :: Cartography
+, (X'01993ea09d21764d9a0b98bb22b619ca', X'01993c64a33878f9a402856d3704c9da') -- Human Mercenery :: Vehicles
+ON CONFLICT (`background_id`, `trade_id`) DO NOTHING
 ;
