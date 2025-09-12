@@ -326,5 +326,27 @@ table "attributes_trades" {
     expr = "length(`trade_id`) = 16"
   }
 }
+table "masteries" {
+  schema = schema.main
+  column "id" {
+    type = blob
+    null = false
+  }
+  column "name" {
+    type = text
+    null = false
+  }
+  column "bonus" {
+    type = integer
+    null = false
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  check "16 byte id" {
+    expr = "length(`id`) = 16"
+  }
+  without_rowid = true
+}
 schema "main" {
 }

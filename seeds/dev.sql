@@ -71,3 +71,12 @@ INSERT INTO `attributes_trades` VALUES
     (X'01993b84fcf17fcbb1fed093bfd9853d', X'01993c35c6e77510b08ce43982d13b13')
     ON CONFLICT (`attribute_id`, `trade_id`) DO NOTHING
 ;
+
+INSERT INTO `masteries`
+VALUES (X'01993c50621f720b98cc90eed9ddddea', "Novice", 2)
+, (X'01993c50879c7d63848474593e4e0c70', "Adept", 4)
+, (X'01993c50b7e8763da96d47673a2e12c6', "Expert", 6)
+, (X'01993c50d7297fed893796dc5e928c04', "Master", 8)
+, (X'01993c50ed66774d913ae96abef0b500', "Grandmaster", 10)
+ON CONFLICT (`id`) DO NOTHING
+;
