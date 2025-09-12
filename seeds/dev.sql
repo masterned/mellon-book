@@ -43,13 +43,34 @@ ON CONFLICT (`id`) DO NOTHING
 ;
 
 INSERT INTO `trades`
-VALUES (X'01993c24fd977213be9b22cf1d9abba6', "Arcana")
+VALUES (X'01993c6279d477f690568205594a194f', "Alchemy")
+, (X'01993c24fd977213be9b22cf1d9abba6', "Arcana")
+, (X'01993c60a4d47cf4b28b04a2cab76f31', "Blacksmithing")
+, (X'01993c6263387012b539dae12bce21f3', "Brewing")
+, (X'01993c625d70790a88440d0dba805941', "Carpentry")
+, (X'01993c624f007611b33b6c5bfc97872c', "Cartography")
+, (X'01993c65b4297edeb05e6bbc974a5c58', "Cooking")
+, (X'01993c61dfba7a028fdf00240ed1ea7c', "Cryptography")
+, (X'01993c63065175abb414c08d8a76222c', "Disguise")
+, (X'01993c63288f7ab08bf0bf6dfb02d1ea', "Engineering")
+, (X'01993c634b6c7719ba3f26ded46cf7a3', "Gaming")
+, (X'01993c635f5b784f80ccb306c5d1e165', "Glassblowing")
+, (X'01993c6375607c3aa0ea8f15f2331254', "Herbalism")
 , (X'01993c2692b37405ac3c43ce36d4e499', "History")
+, (X'01993c3419ae7bd39c1b9dbc51822077', "Illustration")
+, (X'01993c638c9e7306b3069151eab22080', "Jeweler")
+, (X'01993c63d606793fa1fd6af329f7a33b', "Leatherworking")
+, (X'01993c63f87c7e109e3bec9f469be611', "Lockpicking")
+, (X'01993c640aac788d9d142249ca54d12e', "Masonry")
+, (X'01993c35c6e77510b08ce43982d13b13', "Musician")
 , (X'01993c26c3b277ea9e479a1ca7c697bf', "Nature")
 , (X'01993c26e3fe743d80e99c7956d25f3a', "Occultism")
 , (X'01993c271111702884ae000055dff749', "Religion")
-, (X'01993c3419ae7bd39c1b9dbc51822077', "Illustration")
-, (X'01993c35c6e77510b08ce43982d13b13', "Musician")
+, (X'01993c642fde7df2adae5fa0a7f0b381', "Sculpting")
+, (X'01993c64630f78ee93da7ac5e029d4d5', "Theatre")
+, (X'01993c6482ea75b8894f17be262687bd', "Tinkering")
+, (X'01993c648fd470b48d6105d6b8f167af', "Weaving")
+, (X'01993c64a33878f9a402856d3704c9da', "Vehicles")
 ON CONFLICT (`id`) DO NOTHING
 ;
 
