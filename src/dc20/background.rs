@@ -1,7 +1,7 @@
 use turann::Builder;
 use uuid::Uuid;
 
-use super::{LanguageFluency, Skill};
+use crate::dc20::{LanguageFluency, Skill, Trade};
 
 #[derive(Builder, Clone, Debug, PartialEq)]
 #[builder(validate = Self::has_skills_and_trades_languages)]
@@ -13,7 +13,7 @@ pub struct Background {
     #[builder(each = "skill")]
     pub skills: Vec<Skill>,
     #[builder(each = "trade")]
-    pub trades: Vec<Skill>,
+    pub trades: Vec<Trade>,
     #[builder(each = "language_fluency")]
     pub language_fluencies: Vec<LanguageFluency>,
 }

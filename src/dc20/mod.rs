@@ -9,6 +9,7 @@ pub mod maneuver;
 pub mod mastery;
 pub mod skill;
 pub mod spell;
+pub mod trade;
 
 pub use ancestry::*;
 pub use attribute::*;
@@ -21,3 +22,4 @@ pub use maneuver::*;
 pub use mastery::*;
 pub use skill::*;
 pub use spell::*;
+pub use trade::*;

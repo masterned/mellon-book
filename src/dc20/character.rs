@@ -191,8 +191,18 @@ mod tests {
 
         let soldier = Background::builder()
             .name("Soldier")?
-            .skill(Skill::builder().name("Athletics").build()?)
-            .trade(Skill::builder().name("Blacksmithing").build()?)
+            .skill(
+                Skill::builder()
+                    .name("Athletics")
+                    .attribute_id(uuid::Uuid::default())
+                    .build()?,
+            )
+            .trade(
+                Trade::builder()
+                    .name("Blacksmithing")
+                    .attribute_id(uuid::Uuid::default())
+                    .build()?,
+            )
             .language_fluency(LanguageFluency::common())
             .build()?;
 

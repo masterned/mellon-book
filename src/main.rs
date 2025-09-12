@@ -51,7 +51,7 @@ async fn main() -> anyhow::Result<()> {
                 .name("Bounty Hunter")?
                 .skill(awareness)
                 .trade(
-                    Skill::builder()
+                    Trade::builder()
                         .name("Engineering")
                         .attribute_id(uuid::Uuid::from_u128(0x01993b8556b4774aa4a333bd7f76469e))
                         .build()?,

@@ -23,7 +23,7 @@ fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
                         .build()?,
                 )
                 .trade(
-                    Skill::builder()
+                    Trade::builder()
                         .name("Blacksmithing")
                         .attribute_id(uuid::Uuid::now_v7())
                         .build()?,
