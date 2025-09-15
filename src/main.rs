@@ -30,7 +30,8 @@ async fn main() -> anyhow::Result<()> {
         .cost(0 as i8)
         .build()?;
 
-    let awareness = Skill::load(&pool, Uuid::from_u128(0x01993a736a8577e183451a57d7c324de)).await?;
+    let background =
+        Background::load(&pool, Uuid::from_u128(0x01993ea09d21764d9a0b98bb22b619ca)).await?;
 
     let character = CharacterBuilder::default()
         .player(spencer)
@@ -46,14 +47,7 @@ async fn main() -> anyhow::Result<()> {
         })
         .ancestry(human)
         .ancestry_trait(undying)
-        .background(
-            Background::builder()
-                .name("Bounty Hunter")?
-                .skill(awareness)
-                .trade(Trade::builder().name("Engineering").build()?)
-                .language_fluency(LanguageFluency::common())
-                .build()?,
-        )
+        .background(background)
         .attributes(
             Attributes::builder()
                 .prime(AttributeLevel {
@@ -85,6 +79,24 @@ async fn main() -> anyhow::Result<()> {
 
     println!("PD: {:#?}", character.precision_defense());
     println!("AD: {:#?}", character.area_defense());
+
+    let background = character.background();
+    // TODO: adjust how `Language` struct works
+    // println!(
+    //     "{} Languages: {:#?}",
+    //     background.name,
+    //     background.load_languages(&pool).await?
+    // );
+    println!(
+        "{} Trades: {:#?}",
+        background.name,
+        background.load_trades(&pool).await?
+    );
+    println!(
+        "{} Skills: {:#?}",
+        background.name,
+        background.load_skills(&pool).await?
+    );
 
     Ok(())
 }

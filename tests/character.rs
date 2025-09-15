@@ -13,19 +13,7 @@ fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
         .character_name("Test Name")
         .class(ClassEntry::new("Champion"))
         .ancestry(human)
-        .background(
-            Background::builder()
-                .name("Soldier")?
-                .skill(
-                    Skill::builder()
-                        .name("Athletics")
-                        .attribute_id(uuid::Uuid::now_v7())
-                        .build()?,
-                )
-                .trade(Trade::builder().name("Blacksmithing").build()?)
-                .language_fluency(LanguageFluency::common())
-                .build()?,
-        )
+        .background(Background::builder().name("Soldier")?.build()?)
         .attributes(
             Attributes::builder()
                 .prime(

@@ -189,17 +189,7 @@ mod tests {
 
         let champion = ClassEntry::new("Champion");
 
-        let soldier = Background::builder()
-            .name("Soldier")?
-            .skill(
-                Skill::builder()
-                    .name("Athletics")
-                    .attribute_id(uuid::Uuid::default())
-                    .build()?,
-            )
-            .trade(Trade::builder().name("Blacksmithing").build()?)
-            .language_fluency(LanguageFluency::common())
-            .build()?;
+        let soldier = Background::builder().name("Soldier")?.build()?;
 
         let attributes = Attributes::builder()
             .prime(

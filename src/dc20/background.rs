@@ -1,46 +1,17 @@
 use turann::Builder;
 use uuid::Uuid;
 
-use crate::dc20::{LanguageFluency, Skill, Trade};
+use crate::dc20::{Skill, Trade};
 
 #[derive(Builder, Clone, Debug, PartialEq)]
-#[builder(validate = Self::has_skills_and_trades_languages)]
 pub struct Background {
     #[builder(default = Uuid::new_v4)]
-    pub uuid: Uuid,
+    pub id: Uuid,
     #[builder(validate = Self::validate_name)]
     pub name: String,
-    #[builder(each = "skill")]
-    pub skills: Vec<Skill>,
-    #[builder(each = "trade")]
-    pub trades: Vec<Trade>,
-    #[builder(each = "language_fluency")]
-    pub language_fluencies: Vec<LanguageFluency>,
 }
 
 impl BackgroundBuilder {
-    fn has_skills_and_trades_languages(
-        background: Background,
-    ) -> Result<Background, BackgroundBuilderError> {
-        let mut msg: Option<Vec<&str>> = None;
-
-        if background.skills.is_empty() {
-            msg.get_or_insert_default().push("Skills");
-        }
-        if background.trades.is_empty() {
-            msg.get_or_insert_default().push("Trades");
-        }
-        if background.language_fluencies.is_empty() {
-            msg.get_or_insert_default().push("Language Fluencies");
-        }
-
-        if let Some(msg) = msg {
-            Err(BackgroundBuilderError::missing_fields(&msg))
-        } else {
-            Ok(background)
-        }
-    }
-
     fn validate_name(name: String) -> Result<String, BackgroundBuilderError> {
         if name.is_empty() {
             return Err(BackgroundBuilderError::InvalidField {
@@ -50,6 +21,85 @@ impl BackgroundBuilder {
         }
 
         Ok(name)
+    }
+}
+
+impl Background {
+    pub async fn load(pool: &sqlx::SqlitePool, id: uuid::Uuid) -> sqlx::Result<Background> {
+        sqlx::query_as!(
+            Background,
+            r#"
+                SELECT `id` AS "id: uuid::Uuid", `name`
+                FROM `backgrounds`
+                WHERE `id` = ?1
+                LIMIT 1;
+            "#,
+            id
+        )
+        .fetch_one(pool)
+        .await
+    }
+
+    pub async fn save(self, pool: &sqlx::SqlitePool) -> sqlx::Result<()> {
+        let mut conn = pool.acquire().await?;
+
+        let Background { id, name } = self;
+
+        sqlx::query!(
+            r#"
+                INSERT INTO `backgrounds` VALUES
+                (?1, ?2)
+                ON CONFLICT (`id`) DO UPDATE
+                SET `name` = ?2;
+            "#,
+            id,
+            name
+        )
+        .execute(&mut *conn)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn load_skills(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Vec<Skill>> {
+        let Background { ref id, .. } = self;
+
+        sqlx::query_as!(
+            Skill,
+            r#"
+                SELECT s.`id` AS "id: uuid::Uuid"
+                    , s.`name`
+                    , s.`attribute_id` AS "attribute_id: uuid::Uuid"
+                FROM `skills` AS s
+                JOIN `backgrounds_skills` AS b_s
+                    ON s.`id` = b_s.`skill_id`
+                WHERE b_s.`background_id` = ?1
+                ;
+            "#,
+            id
+        )
+        .fetch_all(pool)
+        .await
+    }
+
+    pub async fn load_trades(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Vec<Trade>> {
+        let Background { ref id, .. } = self;
+
+        sqlx::query_as!(
+            Trade,
+            r#"
+                SELECT t.`id` AS "id: uuid::Uuid"
+                    , t.`name`
+                FROM `trades` AS t
+                JOIN `backgrounds_trades` AS b_t
+                    ON t.`id` = b_t.`trade_id`
+                WHERE b_t.`background_id` = ?1
+                ;
+            "#,
+            id
+        )
+        .fetch_all(pool)
+        .await
     }
 }
 
