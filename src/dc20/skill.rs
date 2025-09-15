@@ -1,6 +1,8 @@
 use turann::Builder;
 use uuid::Uuid;
 
+use crate::dc20::Attribute;
+
 #[derive(Builder, Clone, Debug, PartialEq)]
 pub struct Skill {
     #[builder(default = Uuid::now_v7)]
@@ -50,6 +52,27 @@ impl Skill {
         .await?;
 
         Ok(())
+    }
+
+    pub async fn load_attribute(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Attribute> {
+        let Skill {
+            ref attribute_id, ..
+        } = self;
+
+        sqlx::query_as!(
+            Attribute,
+            r#"
+                SELECT `id` AS "id: uuid::Uuid"
+                    , `name`
+                FROM `attributes`
+                WHERE `id` = ?1
+                LIMIT 1
+                ;
+            "#,
+            attribute_id
+        )
+        .fetch_one(pool)
+        .await
     }
 }
 

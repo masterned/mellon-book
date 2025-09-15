@@ -92,11 +92,13 @@ async fn main() -> anyhow::Result<()> {
         background.name,
         background.load_trades(&pool).await?
     );
-    println!(
-        "{} Skills: {:#?}",
-        background.name,
-        background.load_skills(&pool).await?
-    );
+    let skills = background.load_skills(&pool).await?;
+    println!("{} Skills: {:#?}", background.name, skills);
+
+    for skill in skills {
+        let attr = skill.load_attribute(&pool).await?;
+        println!("{attr:#?}");
+    }
 
     Ok(())
 }
