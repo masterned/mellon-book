@@ -192,6 +192,9 @@ table "ancestry_traits_character_levels" {
     null = false
     type = blob
   }
+  primary_key {
+    columns = [column.ancestry_trait_id, column.character_level_id]
+  }
   foreign_key "character_level_fk" {
     columns     = [column.character_level_id]
     ref_columns = [table.character_levels.column.id]
@@ -267,6 +270,9 @@ table "ancestries_characters" {
   column "character_id" {
     null = false
     type = blob
+  }
+  primary_key {
+    columns = [column.ancestry_id, column.character_id]
   }
   foreign_key "character_fk" {
     columns     = [column.character_id]
