@@ -1,34 +1,3 @@
-table "_sqlx_migrations" {
-  schema = schema.main
-  column "version" {
-    null = true
-    type = bigint
-  }
-  column "description" {
-    null = false
-    type = text
-  }
-  column "installed_on" {
-    null    = false
-    type    = sql("timestamp")
-    default = sql("CURRENT_TIMESTAMP")
-  }
-  column "success" {
-    null = false
-    type = boolean
-  }
-  column "checksum" {
-    null = false
-    type = blob
-  }
-  column "execution_time" {
-    null = false
-    type = bigint
-  }
-  primary_key {
-    columns = [column.version]
-  }
-}
 table "players" {
   schema = schema.main
   column "id" {
@@ -207,33 +176,6 @@ table "ancestry_traits_character_levels" {
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
-}
-table "characters_character_levels" {
-  schema = schema.main
-  column "character_id" {
-    null = false
-    type = blob
-  }
-  column "character_level_id" {
-    null = false
-    type = blob
-  }
-  primary_key {
-    columns = [column.character_id, column.character_level_id]
-  }
-  foreign_key "character_fk" {
-    columns     = [column.character_id]
-    ref_columns = [table.characters.column.id]
-    on_update   = NO_ACTION
-    on_delete   = CASCADE
-  }
-  foreign_key "character_level_fk" {
-    columns     = [column.character_level_id]
-    ref_columns = [table.character_levels.column.id]
-    on_update   = NO_ACTION
-    on_delete   = CASCADE
-  }
-  
 }
 table "backgrounds_character_levels" {
   schema = schema.main
