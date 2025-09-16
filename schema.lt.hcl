@@ -200,7 +200,7 @@ table "ancestry_traits_character_levels" {
   }
   foreign_key "ancestry_trait_fk" {
     columns     = [column.ancestry_trait_id]
-    ref_columns = [table.ancestries.column.id]
+    ref_columns = [table.ancestry_traits.column.id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
