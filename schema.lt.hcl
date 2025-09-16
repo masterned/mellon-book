@@ -205,6 +205,59 @@ table "ancestry_traits_character_levels" {
     on_delete   = CASCADE
   }
 }
+table "characters_character_levels" {
+  schema = schema.main
+  column "character_id" {
+    null = false
+    type = blob
+  }
+  column "character_level_id" {
+    null = false
+    type = blob
+  }
+  primary_key {
+    columns = [column.character_id, column.character_level_id]
+  }
+  foreign_key "character_fk" {
+    columns     = [column.character_id]
+    ref_columns = [table.characters.column.id]
+    on_update   = NO_ACTION
+    on_delete   = CASCADE
+  }
+  foreign_key "character_level_fk" {
+    columns     = [column.character_level_id]
+    ref_columns = [table.character_levels.column.id]
+    on_update   = NO_ACTION
+    on_delete   = CASCADE
+  }
+  
+}
+table "backgrounds_character_levels" {
+  schema = schema.main
+  column "background_id" {
+    null = false
+    type = blob
+  }
+  column "character_level_id" {
+    null = false
+    type = blob
+  }
+  primary_key {
+    columns = [column.background_id, column.character_level_id]
+  }
+  foreign_key "background_fk" {
+    columns     = [column.background_id]
+    ref_columns = [table.backgrounds.column.id]
+    on_update   = NO_ACTION
+    on_delete   = CASCADE
+  }
+  foreign_key "character_level_fk" {
+    columns     = [column.character_level_id]
+    ref_columns = [table.character_levels.column.id]
+    on_update   = NO_ACTION
+    on_delete   = CASCADE
+  }
+}
 table "ancestries_characters" {
   schema = schema.main
   column "ancestry_id" {
