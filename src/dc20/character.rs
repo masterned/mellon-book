@@ -17,8 +17,6 @@ pub struct Character {
     #[builder(each = "ancestry_trait")]
     ancestry_traits: Vec<AncestryTrait>,
     background: Background,
-    #[builder(default)]
-    level: Level,
     attributes: Attributes,
 }
 
@@ -53,9 +51,44 @@ impl Character {
         &self.background
     }
 
+    pub async fn load_level(&self, pool: &sqlx::SqlitePool, level: u32) -> sqlx::Result<Level> {
+        sqlx::query_as!(
+            Level,
+            r#"
+                SELECT `id` AS "id: uuid::Uuid"
+                    , `character_id` AS "character_id: uuid::Uuid"
+                    , `level` AS "level: u32"
+                FROM `character_levels`
+                WHERE `character_id` = ?1
+                    AND `level` = ?2
+                LIMIT 1
+                ;
+            "#,
+            self.id,
+            level
+        )
+        .fetch_one(pool)
+        .await
+    }
+
     #[must_use]
-    pub fn level(&self) -> &Level {
-        &self.level
+    pub async fn load_max_level(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Level> {
+        sqlx::query_as!(
+            Level,
+            r#"
+                SELECT `id` AS "id: uuid::Uuid"
+                    , `character_id` AS "character_id: uuid::Uuid"
+                    , `level` AS "level: u32"
+                FROM `character_levels`
+                WHERE `character_id` = ?1
+                ORDER BY `level` DESC
+                LIMIT 1
+                ;
+            "#,
+            self.id
+        )
+        .fetch_one(pool)
+        .await
     }
 
     #[must_use]
@@ -64,9 +97,7 @@ impl Character {
     }
 
     #[must_use]
-    pub fn precision_defense(&self) -> Defense {
-        let combat_mastery = self.level.calc_combat_mastery();
-
+    pub fn precision_defense(&self, combat_mastery: usize) -> Defense {
         let agility = self.attributes.agility().base_score as usize;
         let intelligence = self.attributes.intelligence().base_score as usize;
 
@@ -77,9 +108,7 @@ impl Character {
     }
 
     #[must_use]
-    pub fn area_defense(&self) -> Defense {
-        let combat_mastery = self.level.calc_combat_mastery();
-
+    pub fn area_defense(&self, combat_mastery: usize) -> Defense {
         let might = self.attributes.might().base_score as usize;
         let charisma = self.attributes.might().base_score as usize;
 
@@ -90,19 +119,84 @@ impl Character {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Level(usize);
+#[derive(Builder, Clone, Debug, PartialEq, PartialOrd)]
+pub struct Level {
+    #[builder(default = uuid::Uuid::now_v7)]
+    pub id: uuid::Uuid,
+    #[builder(default)]
+    pub character_id: uuid::Uuid,
+    #[builder(default = LevelBuilder::default_level)]
+    pub level: u32,
+}
+
+impl LevelBuilder {
+    fn default_level() -> u32 {
+        1
+    }
+}
 
 impl Level {
-    #[must_use]
     pub fn calc_combat_mastery(&self) -> usize {
-        self.0.div_ceil(2)
+        let level = self.level as usize;
+        level.div_ceil(2)
+    }
+
+    pub async fn load(pool: &sqlx::SqlitePool, id: uuid::Uuid) -> sqlx::Result<Level> {
+        sqlx::query_as!(
+            Level,
+            r#"
+                SELECT `id` AS "id: uuid::Uuid"
+                    , `character_id` AS "character_id: uuid::Uuid"
+                    , `level` AS "level: u8"
+                FROM `character_levels`
+                WHERE `id` = ?1
+                LIMIT 1
+            "#,
+            id
+        )
+        .fetch_one(pool)
+        .await
+    }
+
+    pub async fn save(self, pool: &sqlx::SqlitePool) -> sqlx::Result<()> {
+        let mut conn = pool.acquire().await?;
+
+        let Level {
+            id,
+            character_id,
+            level,
+        } = self;
+        let level = level as u32;
+
+        sqlx::query!(
+            "
+                INSERT INTO `character_levels`
+                VALUES (?1
+                    ,?2
+                    ,?3)
+                ON CONFLICT (`id`) DO UPDATE
+                    SET `character_id` = ?2
+                    , `level` = ?3
+                ;
+            ",
+            id,
+            character_id,
+            level
+        )
+        .execute(&mut *conn)
+        .await?;
+
+        Ok(())
     }
 }
 
 impl Default for Level {
     fn default() -> Self {
-        Level(1)
+        Self {
+            id: uuid::Uuid::now_v7(),
+            character_id: Default::default(),
+            level: 1,
+        }
     }
 }
 
@@ -224,7 +318,6 @@ mod tests {
                 ancestries: vec![human],
                 ancestry_traits: vec![],
                 background: soldier,
-                level: Level::default(),
                 attributes,
             }
         );
@@ -234,25 +327,64 @@ mod tests {
 
     #[test]
     fn _combat_mastery_half_level_rounded_up() {
-        assert_eq!(Level(1).calc_combat_mastery(), 1);
-        assert_eq!(Level(2).calc_combat_mastery(), 1);
-        assert_eq!(Level(3).calc_combat_mastery(), 2);
-        assert_eq!(Level(4).calc_combat_mastery(), 2);
-        assert_eq!(Level(5).calc_combat_mastery(), 3);
-        assert_eq!(Level(6).calc_combat_mastery(), 3);
-        assert_eq!(Level(7).calc_combat_mastery(), 4);
-        assert_eq!(Level(8).calc_combat_mastery(), 4);
-        assert_eq!(Level(9).calc_combat_mastery(), 5);
-        assert_eq!(Level(10).calc_combat_mastery(), 5);
-        assert_eq!(Level(11).calc_combat_mastery(), 6);
-        assert_eq!(Level(12).calc_combat_mastery(), 6);
-        assert_eq!(Level(13).calc_combat_mastery(), 7);
-        assert_eq!(Level(14).calc_combat_mastery(), 7);
-        assert_eq!(Level(15).calc_combat_mastery(), 8);
-        assert_eq!(Level(16).calc_combat_mastery(), 8);
-        assert_eq!(Level(17).calc_combat_mastery(), 9);
-        assert_eq!(Level(18).calc_combat_mastery(), 9);
-        assert_eq!(Level(19).calc_combat_mastery(), 10);
-        assert_eq!(Level(20).calc_combat_mastery(), 10);
+        let mut level = Level::default();
+        assert_eq!(level.calc_combat_mastery(), 1);
+
+        level.level = 2;
+        assert_eq!(level.calc_combat_mastery(), 1);
+
+        level.level = 3;
+        assert_eq!(level.calc_combat_mastery(), 2);
+
+        level.level = 4;
+        assert_eq!(level.calc_combat_mastery(), 2);
+
+        level.level = 5;
+        assert_eq!(level.calc_combat_mastery(), 3);
+
+        level.level = 6;
+        assert_eq!(level.calc_combat_mastery(), 3);
+
+        level.level = 7;
+        assert_eq!(level.calc_combat_mastery(), 4);
+
+        level.level = 8;
+        assert_eq!(level.calc_combat_mastery(), 4);
+
+        level.level = 9;
+        assert_eq!(level.calc_combat_mastery(), 5);
+
+        level.level = 10;
+        assert_eq!(level.calc_combat_mastery(), 5);
+
+        level.level = 11;
+        assert_eq!(level.calc_combat_mastery(), 6);
+
+        level.level = 12;
+        assert_eq!(level.calc_combat_mastery(), 6);
+
+        level.level = 13;
+        assert_eq!(level.calc_combat_mastery(), 7);
+
+        level.level = 14;
+        assert_eq!(level.calc_combat_mastery(), 7);
+
+        level.level = 15;
+        assert_eq!(level.calc_combat_mastery(), 8);
+
+        level.level = 16;
+        assert_eq!(level.calc_combat_mastery(), 8);
+
+        level.level = 17;
+        assert_eq!(level.calc_combat_mastery(), 9);
+
+        level.level = 18;
+        assert_eq!(level.calc_combat_mastery(), 9);
+
+        level.level = 19;
+        assert_eq!(level.calc_combat_mastery(), 10);
+
+        level.level = 20;
+        assert_eq!(level.calc_combat_mastery(), 10);
     }
 }

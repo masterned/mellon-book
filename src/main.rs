@@ -8,7 +8,7 @@ use uuid::Uuid;
 async fn main() -> anyhow::Result<()> {
     let pool = SqlitePool::connect(&std::env::var("DATABASE_URL")?).await?;
 
-    let player_id = Uuid::from_str("01991836ac9f75898eff73915fd87018").unwrap();
+    let player_id = uuid::uuid!("01991836-ac9f-7589-8eff-73915fd87018");
 
     let (secs, nsecs) = player_id.get_timestamp().unwrap().to_unix();
     let timestamp = chrono::DateTime::from_timestamp(secs as i64, nsecs);
@@ -33,7 +33,8 @@ async fn main() -> anyhow::Result<()> {
     let background =
         Background::load(&pool, Uuid::from_u128(0x01993ea09d21764d9a0b98bb22b619ca)).await?;
 
-    let character = CharacterBuilder::default()
+    let character = Character::builder()
+        .id(Uuid::from_u128(0x166ae11a3d404c618d390415e0cae6bb))
         .player(spencer)
         .character_name("Cygnus")
         .class(ClassEntry {
@@ -77,8 +78,17 @@ async fn main() -> anyhow::Result<()> {
 
     println!("{character:#?}");
 
-    println!("PD: {:#?}", character.precision_defense());
-    println!("AD: {:#?}", character.area_defense());
+    let level = character.load_max_level(&pool).await?;
+    println!("{level:#?}");
+
+    println!(
+        "PD: {:#?}",
+        character.precision_defense(level.calc_combat_mastery())
+    );
+    println!(
+        "AD: {:#?}",
+        character.area_defense(level.calc_combat_mastery())
+    );
 
     let background = character.background();
     // TODO: adjust how `Language` struct works

@@ -175,7 +175,12 @@ mod tests {
             skills: vec![],
         };
 
-        assert_eq!(attribute.calc_save(Level::default()), attribute.base_score);
+        let level = Level::builder()
+            .character_id(uuid::Uuid::default())
+            .build()
+            .unwrap();
+
+        assert_eq!(attribute.calc_save(level), attribute.base_score);
     }
 
     #[test]
@@ -185,7 +190,10 @@ mod tests {
             save_proficiency: true,
             skills: vec![],
         };
-        let level = Level::default();
+        let level = Level::builder()
+            .character_id(uuid::Uuid::default())
+            .build()
+            .unwrap();
         let combat_mastery = level.calc_combat_mastery() as isize;
 
         assert_eq!(
