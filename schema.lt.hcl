@@ -236,32 +236,6 @@ table "backgrounds_character_levels" {
     on_delete   = CASCADE
   }
 }
-table "ancestries_characters" {
-  schema = schema.main
-  column "ancestry_id" {
-    null = false
-    type = blob
-  }
-  column "character_id" {
-    null = false
-    type = blob
-  }
-  primary_key {
-    columns = [column.ancestry_id, column.character_id]
-  }
-  foreign_key "character_fk" {
-    columns     = [column.character_id]
-    ref_columns = [table.characters.column.id]
-    on_update   = NO_ACTION
-    on_delete   = CASCADE
-  }
-  foreign_key "ancestry_fk" {
-    columns     = [column.ancestry_id]
-    ref_columns = [table.ancestries.column.id]
-    on_update   = NO_ACTION
-    on_delete   = CASCADE
-  }
-}
 table "attributes" {
   schema = schema.main
   column "id" {
