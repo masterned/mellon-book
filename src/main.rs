@@ -93,17 +93,20 @@ async fn main() -> anyhow::Result<()> {
     println!("ancestry(ies): {:#?}", ancestries);
 
     let background = character.background();
-    // TODO: adjust how `Language` struct works
-    // println!(
-    //     "{} Languages: {:#?}",
-    //     background.name,
-    //     background.load_languages(&pool).await?
-    // );
+
+    // TODO: show language fluencies associated w/ background
+    println!(
+        "{} Languages: {:#?}",
+        background.name,
+        background.load_languages(&pool).await?
+    );
+
     println!(
         "{} Trades: {:#?}",
         background.name,
         background.load_trades(&pool).await?
     );
+
     let skills = background.load_skills(&pool).await?;
     println!("{} Skills: {:#?}", background.name, skills);
 

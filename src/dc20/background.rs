@@ -1,7 +1,7 @@
 use turann::Builder;
 use uuid::Uuid;
 
-use crate::dc20::{Skill, Trade};
+use crate::dc20::{Language, Skill, Trade};
 
 #[derive(Builder, Clone, Debug, PartialEq)]
 pub struct Background {
@@ -59,6 +59,24 @@ impl Background {
         .await?;
 
         Ok(())
+    }
+
+    pub async fn load_languages(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Vec<Language>> {
+        sqlx::query_as!(
+            Language,
+            r#"
+                SELECT l.`id` AS "id: uuid::Uuid"
+                    , l.`name`
+                FROM `languages` AS l
+                JOIN `backgrounds_languages` AS b_l
+                    ON b_l.`language_id` = l.`id`
+                WHERE b_l.`background_id` = ?1
+                ;
+            "#,
+            self.id
+        )
+        .fetch_all(pool)
+        .await
     }
 
     pub async fn load_skills(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Vec<Skill>> {
