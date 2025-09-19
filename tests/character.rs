@@ -6,13 +6,10 @@ use mellon_book::{dc20::*, player::Player};
 fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
     let player = Player::builder().name("Test Player")?.build()?;
 
-    let human = Ancestry::builder().name("Human").build()?;
-
     let test_character = Character::builder()
         .player(player)
         .character_name("Test Name")
         .class(ClassEntry::new("Champion"))
-        .ancestry(human)
         .background(Background::builder().name("Soldier")?.build()?)
         .attributes(
             Attributes::builder()

@@ -12,8 +12,6 @@ pub struct Character {
     player: Player,
     character_name: String,
     class: ClassEntry,
-    #[builder(each = "ancestry")]
-    ancestries: Vec<Ancestry>,
     #[builder(each = "ancestry_trait")]
     ancestry_traits: Vec<AncestryTrait>,
     background: Background,
@@ -39,11 +37,6 @@ impl Character {
     #[must_use]
     pub fn class(&self) -> &ClassEntry {
         &self.class
-    }
-
-    #[must_use]
-    pub fn ancestries(&self) -> &[Ancestry] {
-        &self.ancestries
     }
 
     #[must_use]
@@ -188,6 +181,24 @@ impl Level {
 
         Ok(())
     }
+
+    pub async fn load_ancestries(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Vec<Ancestry>> {
+        sqlx::query_as!(
+            Ancestry,
+            r#"
+                SELECT a.`id` AS "id: uuid::Uuid"
+                    , `name`
+                FROM `ancestries` AS a
+                JOIN `ancestries_character_levels` AS a_c_l
+                    ON a.`id` = a_c_l.`ancestry_id`
+                WHERE a_c_l.`character_level_id` = ?1
+                ;
+            "#,
+            self.id
+        )
+        .fetch_all(pool)
+        .await
+    }
 }
 
 impl Default for Level {
@@ -238,11 +249,8 @@ mod tests {
                 "Player Name",
                 "Character Name",
                 "Class",
-                "Ancestry",
                 "Background",
                 "Attributes",
-                "Physical Defense",
-                "Mystical Defense"
             ]))
         );
 
@@ -256,17 +264,10 @@ mod tests {
             Err(CharacterBuilderError::missing_fields(&[
                 "Character Name",
                 "Class",
-                "Ancestry",
                 "Background",
                 "Attributes",
-                "Physical Defense",
-                "Mystical Defense"
             ]))
         );
-
-        let human = Ancestry::builder().name("Human").build()?;
-
-        builder.ancestry(human.clone());
 
         let result = builder.clone().build();
         assert_eq!(
@@ -276,8 +277,6 @@ mod tests {
                 "Class",
                 "Background",
                 "Attributes",
-                "Physical Defense",
-                "Mystical Defense"
             ]))
         );
 
@@ -300,7 +299,6 @@ mod tests {
         builder
             .character_name("Johannas Doeworth")
             .class(champion.clone())
-            .ancestry(human.clone())
             .background(soldier.clone())
             .attributes(attributes.clone());
         let mut character = builder.build()?;
@@ -315,7 +313,6 @@ mod tests {
                 player: john_doe,
                 character_name: "Johannas Doeworth".to_string(),
                 class: champion,
-                ancestries: vec![human],
                 ancestry_traits: vec![],
                 background: soldier,
                 attributes,

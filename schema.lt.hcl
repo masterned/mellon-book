@@ -151,6 +151,39 @@ table "character_levels" {
   }
   without_rowid = true
 }
+table "ancestries_character_levels" {
+  schema = schema.main
+  column "ancestry_id" {
+    null = false
+    type = blob
+  }
+  column "character_level_id" {
+    null = false
+    type = blob
+  }
+  primary_key {
+    columns = [column.ancestry_id, column.character_level_id]
+  }
+  foreign_key "ancestry_fk" {
+    columns     = [column.ancestry_id]
+    ref_columns = [table.ancestries.column.id]
+    on_update   = NO_ACTION
+    on_delete   = CASCADE
+  }
+  foreign_key "character_level_fk" {
+    columns     = [column.character_level_id]
+    ref_columns = [table.character_levels.column.id]
+    on_update   = NO_ACTION
+    on_delete   = CASCADE
+  }
+  check "16 byte ancestry_id" {
+    expr = "length(`ancestry_id`) = 16"
+  }
+  check "16 byte character_level_id" {
+    expr = "length(`character_level_id`) = 16"
+  }
+  without_rowid = true
+}
 table "ancestry_traits_character_levels" {
   schema = schema.main
   column "ancestry_trait_id" {

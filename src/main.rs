@@ -46,7 +46,6 @@ async fn main() -> anyhow::Result<()> {
             ],
             ..ClassEntry::new("Sorcerer")
         })
-        .ancestry(human)
         .ancestry_trait(undying)
         .background(background)
         .attributes(
@@ -89,6 +88,9 @@ async fn main() -> anyhow::Result<()> {
         "AD: {:#?}",
         character.area_defense(level.calc_combat_mastery())
     );
+
+    let ancestries = level.load_ancestries(&pool).await?;
+    println!("ancestry(ies): {:#?}", ancestries);
 
     let background = character.background();
     // TODO: adjust how `Language` struct works
