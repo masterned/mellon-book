@@ -26,6 +26,7 @@
           rust-analyzer
           sqlite
           sqlx-cli
+          terraform-ls
         ];
 
         nativeBuildInputs = with pkgs; [
