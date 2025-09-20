@@ -33,6 +33,31 @@ VALUES (X'01993b832d6c7e7882b2063d613880b9', "Prime")
 ON CONFLICT (`id`) DO NOTHING
 ;
 
+INSERT INTO `classes`
+VALUES (X'019964edee4b746ea5a85006d034d3ba', "Artificer")
+, (X'019964ee4cef7ec3a2ce3ea8844aadc9', "Barbarian")
+, (X'019964ee6f237b65b83cf0cd85bf985f', "Bard")
+, (X'019964ee77db78869c6783619eee210c', "Champion")
+, (X'019964ee7ef475a68360cc0a3b12cffc', "Cleric")
+, (X'019964ee864d7c15b46cbd28180f1f27', "Commander")
+, (X'019964ee8cf6787e91d0f48e5c194f7b', "Druid")
+, (X'019964eea1ad7225a1692680524594a3', "Hunter")
+, (X'019964eeaac57516a28f2fcfd17fdfb3', "Monk")
+, (X'019964eeb1ff7b288f9443d7cf59a4e5', "Psion")
+, (X'019964eeb92879d19159713bf7c8cdbd', "Rogue")
+, (X'019964eebf03730a95530ec528bb68ce', "Sorcerer")
+, (X'019964eec5df783bbf5365a4ba231213', "Spellblade")
+, (X'019964eecd22732fa0ab349338786aed', "Warlock")
+, (X'019964eed31576dea71821db96213fcd', "Wizard")
+ON CONFLICT (`id`) DO NOTHING
+;
+
+INSERT INTO `classes_subclasses`
+VALUES (X'019964eeb1ff7b288f9443d7cf59a4e5', X'019964f27af17574a82346e464d01aa7') -- Psion :: Oracle
+, (X'019964eeb1ff7b288f9443d7cf59a4e5', X'019964f2835d7929bcdc10d1d9d93a5e') -- Psion :: Psi-Knight
+ON CONFLICT (`class_id`, `subclass_id`) DO NOTHING
+;
+
 INSERT INTO `skills`
 VALUES (X'01993a736a8577e183451a57d7c324de', "Awareness", X'01993b832d6c7e7882b2063d613880b9')
 , (X'01993b89eb9d7d71a9481f5dd0e6dd82', "Athletics", X'01993b83e9f978d4a5ae97c2011f49c6')
@@ -46,6 +71,12 @@ VALUES (X'01993a736a8577e183451a57d7c324de', "Awareness", X'01993b832d6c7e7882b2
 , (X'01993ea24cee74f9a1e9c9d10269ac62', "Investigation", X'01993b8460827289a9e9cc105341940e')
 , (X'01993ea27be07dbbbb8c2a79be9df862', "Medicine", X'01993b8460827289a9e9cc105341940e')
 , (X'01993ea29d2c70f9bc47df7378496cd0', "Survival", X'01993b8460827289a9e9cc105341940e')
+ON CONFLICT (`id`) DO NOTHING
+;
+
+INSERT INTO `subclasses`
+VALUES (X'019964f27af17574a82346e464d01aa7', "Oracle")
+, (X'019964f2835d7929bcdc10d1d9d93a5e', "Psi-Knight")
 ON CONFLICT (`id`) DO NOTHING
 ;
 
