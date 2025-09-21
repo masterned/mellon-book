@@ -2,6 +2,72 @@ use uuid::Uuid;
 
 use super::{Item, Level, Maneuver, SpellList};
 
+#[derive(turann::Builder, Clone, Debug)]
+pub struct Class {
+    #[builder(default = uuid::Uuid::now_v7)]
+    pub id: uuid::Uuid,
+    #[builder(validate = ClassBuilder::validate_name)]
+    pub name: String,
+}
+
+impl ClassBuilder {
+    fn validate_name(name: impl Into<String>) -> Result<String, ClassBuilderError> {
+        let name: String = name.into();
+
+        if name.is_empty() {
+            return Err(ClassBuilderError::InvalidField {
+                field_name: "name".into(),
+                message: "cannot be empty".into(),
+            });
+        }
+
+        Ok(name)
+    }
+}
+
+impl Class {
+    pub async fn load_sublasses(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Vec<Subclass>> {
+        sqlx::query_as!(
+            Subclass,
+            r#"
+                SELECT s.`id` AS "id: uuid::Uuid"
+                    , `name`
+                FROM `subclasses` AS s
+                JOIN `classes_subclasses` c_s
+                    ON c_s.`subclass_id` = s.`id`
+                WHERE c_s.`class_id` = ?1
+                ;
+            "#,
+            self.id
+        )
+        .fetch_all(pool)
+        .await
+    }
+}
+
+#[derive(turann::Builder, Clone, Debug)]
+pub struct Subclass {
+    #[builder(default = uuid::Uuid::now_v7)]
+    pub id: uuid::Uuid,
+    #[builder(validate = SubclassBuilder::validate_name)]
+    pub name: String,
+}
+
+impl SubclassBuilder {
+    fn validate_name(name: impl Into<String>) -> Result<String, SubclassBuilderError> {
+        let name: String = name.into();
+
+        if name.is_empty() {
+            return Err(SubclassBuilderError::InvalidField {
+                field_name: "name".into(),
+                message: "cannot be empty".into(),
+            });
+        }
+
+        Ok(name)
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ClassTableColumn(pub [usize; 10]);
 

@@ -37,15 +37,6 @@ async fn main() -> anyhow::Result<()> {
         .id(Uuid::from_u128(0x166ae11a3d404c618d390415e0cae6bb))
         .player(spencer)
         .character_name("Cygnus")
-        .class(ClassEntry {
-            combat_style: vec![CombatStyle::default_spellcasting()],
-            available_subclasses: vec![
-                SubclassEntry::new("Angelic"),
-                SubclassEntry::new("Draconic"),
-                SubclassEntry::new("Paragon"),
-            ],
-            ..ClassEntry::new("Sorcerer")
-        })
         .ancestry_trait(undying)
         .background(background)
         .attributes(
@@ -91,6 +82,17 @@ async fn main() -> anyhow::Result<()> {
 
     let ancestries = level.load_ancestries(&pool).await?;
     println!("ancestry(ies): {:#?}", ancestries);
+
+    let classes = level.load_classes(&pool).await?;
+    println!("classes: {classes:#?}");
+
+    for class in classes {
+        let available_subclasses = class.load_sublasses(&pool).await?;
+        println!("available subclasses: {available_subclasses:#?}");
+    }
+
+    let subclasses = level.load_sublasses(&pool).await?;
+    println!("subclasses: {subclasses:#?}");
 
     let background = character.background();
 

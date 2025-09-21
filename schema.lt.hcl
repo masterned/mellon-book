@@ -340,6 +340,38 @@ table "character_levels_classes" {
     expr = "length(`class_id`) = 16"
   }
 }
+table "character_levels_subclasses" {
+  schema = schema.main
+  column "character_level_id" {
+    null = false
+    type = blob
+  }
+  column "subclass_id" {
+    null = false
+    type = blob
+  }
+  primary_key {
+    columns = [column.character_level_id, column.subclass_id]
+  }
+  foreign_key "character_level_fk" {
+    columns     = [column.character_level_id]
+    ref_columns = [table.character_levels.column.id]
+    on_update   = NO_ACTION
+    on_delete   = CASCADE
+  }
+  foreign_key "subclass_fk" {
+    columns     = [column.subclass_id]
+    ref_columns = [table.subclasses.column.id]
+    on_update   = NO_ACTION
+    on_delete   = CASCADE
+  }
+  check "16 byte character_level_id" {
+    expr = "length(`character_level_id`) = 16"
+  }
+  check "16 byte subclass_id" {
+    expr = "length(`subclass_id`) = 16"
+  }
+}
 table "attributes" {
   schema = schema.main
   column "id" {

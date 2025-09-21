@@ -9,7 +9,6 @@ fn _built_character_should_have_name() -> Result<(), Box<dyn Error>> {
     let test_character = Character::builder()
         .player(player)
         .character_name("Test Name")
-        .class(ClassEntry::new("Champion"))
         .background(Background::builder().name("Soldier")?.build()?)
         .attributes(
             Attributes::builder()

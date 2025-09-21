@@ -190,3 +190,15 @@ VALUES (X'0199182824927164b25d368464947b6a', X'01991836da1972298430f8ad85a67ee0'
 , (X'019961a4e5427aeaa845989fe8f884c8', X'0199593b03087b8295403e4ed35c2cb6')
 ON CONFLICT (`ancestry_id`, `character_level_id`) DO NOTHING
 ;
+
+INSERT INTO `character_levels_classes`
+VALUES (X'01991836da1972298430f8ad85a67ee0',X'019964eeb1ff7b288f9443d7cf59a4e5')
+, (X'0199593a64d37f6eafcff8363b19d41b',X'019964eeb1ff7b288f9443d7cf59a4e5')
+, (X'0199593b03087b8295403e4ed35c2cb6',X'019964eeb1ff7b288f9443d7cf59a4e5')
+ON CONFLICT (`character_level_id`, `class_id`) DO NOTHING
+;
+
+INSERT INTO `character_levels_subclasses`
+VALUES (X'0199593b03087b8295403e4ed35c2cb6', X'019964f2835d7929bcdc10d1d9d93a5e')
+ON CONFLICT (`character_level_id`, `subclass_id`) DO NOTHING
+;

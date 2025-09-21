@@ -1,9 +1,10 @@
 use turann::Builder;
 use uuid::Uuid;
 
-use crate::player::Player;
-
-use super::{Ancestry, AncestryTrait, Attributes, Background, ClassEntry};
+use crate::{
+    dc20::{Ancestry, AncestryTrait, Attributes, Background, Class, Subclass},
+    player::Player,
+};
 
 #[derive(Builder, Clone, Debug, PartialEq)]
 pub struct Character {
@@ -11,7 +12,6 @@ pub struct Character {
     id: Uuid,
     player: Player,
     character_name: String,
-    class: ClassEntry,
     #[builder(each = "ancestry_trait")]
     ancestry_traits: Vec<AncestryTrait>,
     background: Background,
@@ -32,11 +32,6 @@ impl Character {
     #[must_use]
     pub fn character_name(&self) -> &str {
         &self.character_name
-    }
-
-    #[must_use]
-    pub fn class(&self) -> &ClassEntry {
-        &self.class
     }
 
     #[must_use]
@@ -199,6 +194,42 @@ impl Level {
         .fetch_all(pool)
         .await
     }
+
+    pub async fn load_classes(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Vec<Class>> {
+        sqlx::query_as!(
+            Class,
+            r#"
+                SELECT `id` AS "id: uuid::Uuid"
+                    , `name`
+                FROM `classes` AS c
+                JOIN `character_levels_classes` AS c_l_c
+                    ON c.`id` = c_l_c.`class_id`
+                WHERE c_l_c.`character_level_id` = ?1
+                ;
+            "#,
+            self.id
+        )
+        .fetch_all(pool)
+        .await
+    }
+
+    pub async fn load_sublasses(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Vec<Subclass>> {
+        sqlx::query_as!(
+            Subclass,
+            r#"
+                SELECT s.`id` AS "id: uuid::Uuid"
+                    , s.`name`
+                FROM `subclasses` AS s
+                JOIN `character_levels_subclasses` AS c_l_s
+                    ON s.`id` = c_l_s.`subclass_id`
+                WHERE c_l_s.`character_level_id` = ?1
+                ;
+            "#,
+            self.id
+        )
+        .fetch_all(pool)
+        .await
+    }
 }
 
 impl Default for Level {
@@ -280,8 +311,6 @@ mod tests {
             ]))
         );
 
-        let champion = ClassEntry::new("Champion");
-
         let soldier = Background::builder().name("Soldier")?.build()?;
 
         let attributes = Attributes::builder()
@@ -298,7 +327,6 @@ mod tests {
 
         builder
             .character_name("Johannas Doeworth")
-            .class(champion.clone())
             .background(soldier.clone())
             .attributes(attributes.clone());
         let mut character = builder.build()?;
@@ -312,7 +340,6 @@ mod tests {
                 id: char_id,
                 player: john_doe,
                 character_name: "Johannas Doeworth".to_string(),
-                class: champion,
                 ancestry_traits: vec![],
                 background: soldier,
                 attributes,
