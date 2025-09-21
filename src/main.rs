@@ -27,7 +27,7 @@ async fn main() -> anyhow::Result<()> {
     let undying = AncestryTrait::builder()
         .name("Undying")
         .description("You have ADV on Saves against the Doomed Condition")
-        .cost(0 as i8)
+        .cost(0_i8)
         .build()?;
 
     let background =

@@ -26,7 +26,7 @@ impl Character {
 
     #[must_use]
     pub fn player_name(&self) -> &str {
-        &self.player.name()
+        self.player.name()
     }
 
     #[must_use]
@@ -59,7 +59,6 @@ impl Character {
         .await
     }
 
-    #[must_use]
     pub async fn load_max_level(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Level> {
         sqlx::query_as!(
             Level,
@@ -154,7 +153,6 @@ impl Level {
             character_id,
             level,
         } = self;
-        let level = level as u32;
 
         sqlx::query!(
             "
