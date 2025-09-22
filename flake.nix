@@ -20,6 +20,7 @@
           bacon
           cargo
           clippy
+          git
           openssl
           rustc
           rustfmt
@@ -34,9 +35,12 @@
         ];
 
         env = {
-          DATABASE_URL = "sqlite://./database.db";
           RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
         };
+
+        shellHook = ''
+          export DATABASE_URL="sqlite://$(git rev-parse --show-toplevel)/database.db";
+        '';
       };
 
       packages."x86_64-linux".default = naerskLib.buildPackage {
