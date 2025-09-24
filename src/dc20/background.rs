@@ -29,9 +29,9 @@ impl Background {
         sqlx::query_as!(
             Background,
             r#"
-                SELECT `id` AS "id: uuid::Uuid", `name`
+                SELECT `background_id` AS "id: uuid::Uuid", `name`
                 FROM `backgrounds`
-                WHERE `id` = ?1
+                WHERE `background_id` = ?1
                 LIMIT 1;
             "#,
             id
@@ -49,7 +49,7 @@ impl Background {
             r#"
                 INSERT INTO `backgrounds` VALUES
                 (?1, ?2)
-                ON CONFLICT (`id`) DO UPDATE
+                ON CONFLICT (`background_id`) DO UPDATE
                 SET `name` = ?2;
             "#,
             id,
@@ -65,11 +65,11 @@ impl Background {
         sqlx::query_as!(
             Language,
             r#"
-                SELECT l.`id` AS "id: uuid::Uuid"
+                SELECT l.`language_id` AS "id: uuid::Uuid"
                     , l.`name`
                 FROM `languages` AS l
                 JOIN `backgrounds_languages` AS b_l
-                    ON b_l.`language_id` = l.`id`
+                    USING (`language_id`)
                 WHERE b_l.`background_id` = ?1
                 ;
             "#,
@@ -85,12 +85,12 @@ impl Background {
         sqlx::query_as!(
             Skill,
             r#"
-                SELECT s.`id` AS "id: uuid::Uuid"
+                SELECT s.`skill_id` AS "id: uuid::Uuid"
                     , s.`name`
                     , s.`attribute_id` AS "attribute_id: uuid::Uuid"
                 FROM `skills` AS s
                 JOIN `backgrounds_skills` AS b_s
-                    ON s.`id` = b_s.`skill_id`
+                    USING (`skill_id`)
                 WHERE b_s.`background_id` = ?1
                 ;
             "#,
@@ -106,11 +106,11 @@ impl Background {
         sqlx::query_as!(
             Trade,
             r#"
-                SELECT t.`id` AS "id: uuid::Uuid"
+                SELECT t.`trade_id` AS "id: uuid::Uuid"
                     , t.`name`
                 FROM `trades` AS t
                 JOIN `backgrounds_trades` AS b_t
-                    ON t.`id` = b_t.`trade_id`
+                    USING (`trade_id`)
                 WHERE b_t.`background_id` = ?1
                 ;
             "#,

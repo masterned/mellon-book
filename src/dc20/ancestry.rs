@@ -13,9 +13,9 @@ impl Ancestry {
         sqlx::query_as!(
             Ancestry,
             r#"
-                SELECT `id` as "id: Uuid", name
+                SELECT `ancestry_id` as "id: Uuid", name
                 FROM ancestries
-                WHERE id = ?
+                WHERE ancestry_id = ?
                 LIMIT 1;
             "#,
             id
@@ -31,9 +31,9 @@ impl Ancestry {
 
         sqlx::query!(
             r#"
-                INSERT INTO ancestries (`id`, `name`)
+                INSERT INTO ancestries (`ancestry_id`, `name`)
                 VALUES (?1, ?2)
-                ON CONFLICT(`id`) DO UPDATE SET
+                ON CONFLICT(`ancestry_id`) DO UPDATE SET
                     `name` = ?2;
             "#,
             id,
@@ -61,9 +61,12 @@ impl AncestryTrait {
         sqlx::query_as!(
             AncestryTrait,
             r#"
-                SELECT id as "id: Uuid", name, description, cost as "cost: i8"
+                SELECT ancestry_trait_id as "id: Uuid"
+                    , name
+                    , description
+                    , cost as "cost: i8"
                 FROM ancestry_traits
-                WHERE id = ?
+                WHERE ancestry_trait_id = ?1
                 LIMIT 1;
             "#,
             id
@@ -84,9 +87,14 @@ impl AncestryTrait {
 
         sqlx::query!(
             r#"
-                INSERT INTO ancestry_traits (`id`, `name`, `description`, `cost`)
+                INSERT INTO ancestry_traits (
+                    `ancestry_trait_id`
+                    , `name`
+                    , `description`
+                    , `cost`
+                )
                 VALUES (?1, ?2, ?3, ?4)
-                ON CONFLICT(`id`) DO UPDATE SET
+                ON CONFLICT(`ancestry_trait_id`) DO UPDATE SET
                     `name` = ?2,
                     `description` = ?3,
                     `cost` = ?4;

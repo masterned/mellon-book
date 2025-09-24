@@ -27,9 +27,9 @@ impl Player {
         let result = sqlx::query_as!(
             Player,
             r#"
-                SELECT id as "id: Uuid", name
+                SELECT player_id as "id: Uuid", name
                 FROM players
-                WHERE id = ?
+                WHERE player_id = ?
                 LIMIT 1
             "#,
             uuid
@@ -47,9 +47,9 @@ impl Player {
 
         let id = sqlx::query!(
             r#"
-                INSERT INTO players (`id`, `name`)
+                INSERT INTO players (`player_id`, `name`)
                 VALUES ( ?1, ?2 )
-                ON CONFLICT(`id`) DO UPDATE SET
+                ON CONFLICT(`player_id`) DO UPDATE SET
                     name = ?2;
             "#,
             id,

@@ -12,11 +12,10 @@ impl Trade {
         sqlx::query_as!(
             Trade,
             r#"
-                SELECT
-                    `id` AS "id: uuid::Uuid",
-                    `name`
+                SELECT `trade_id` AS "id: uuid::Uuid"
+                    , `name`
                 FROM `trades`
-                WHERE `id` = ?1
+                WHERE `trade_id` = ?1
                 LIMIT 1;
             "#,
             id
@@ -32,9 +31,9 @@ impl Trade {
 
         sqlx::query!(
             r#"
-                INSERT INTO trades (`id`, `name`)
+                INSERT INTO trades (`trade_id`, `name`)
                 VALUES ( ?1, ?2 )
-                ON CONFLICT(`id`) DO UPDATE SET
+                ON CONFLICT(`trade_id`) DO UPDATE SET
                     name = ?2
                 ;
             "#,

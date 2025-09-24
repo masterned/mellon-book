@@ -30,12 +30,12 @@ impl Class {
         sqlx::query_as!(
             Subclass,
             r#"
-                SELECT s.`id` AS "id: uuid::Uuid"
+                SELECT `subclass_id` AS "id: uuid::Uuid"
                     , `name`
-                FROM `subclasses` AS s
-                JOIN `classes_subclasses` c_s
-                    ON c_s.`subclass_id` = s.`id`
-                WHERE c_s.`class_id` = ?1
+                FROM `subclasses`
+                JOIN `classes_subclasses`
+                    USING (`subclass_id`)
+                WHERE `class_id` = ?1
                 ;
             "#,
             self.id

@@ -43,7 +43,7 @@ impl Character {
         sqlx::query_as!(
             Level,
             r#"
-                SELECT `id` AS "id: uuid::Uuid"
+                SELECT `character_level_id` AS "id: uuid::Uuid"
                     , `character_id` AS "character_id: uuid::Uuid"
                     , `level` AS "level: u32"
                 FROM `character_levels`
@@ -63,7 +63,7 @@ impl Character {
         sqlx::query_as!(
             Level,
             r#"
-                SELECT `id` AS "id: uuid::Uuid"
+                SELECT `character_level_id` AS "id: uuid::Uuid"
                     , `character_id` AS "character_id: uuid::Uuid"
                     , `level` AS "level: u32"
                 FROM `character_levels`
@@ -132,11 +132,11 @@ impl Level {
         sqlx::query_as!(
             Level,
             r#"
-                SELECT `id` AS "id: uuid::Uuid"
+                SELECT `character_level_id` AS "id: uuid::Uuid"
                     , `character_id` AS "character_id: uuid::Uuid"
                     , `level` AS "level: u8"
                 FROM `character_levels`
-                WHERE `id` = ?1
+                WHERE `character_level_id` = ?1
                 LIMIT 1
             "#,
             id
@@ -157,10 +157,8 @@ impl Level {
         sqlx::query!(
             "
                 INSERT INTO `character_levels`
-                VALUES (?1
-                    ,?2
-                    ,?3)
-                ON CONFLICT (`id`) DO UPDATE
+                VALUES (?1 ,?2 ,?3)
+                ON CONFLICT (`character_level_id`) DO UPDATE
                     SET `character_id` = ?2
                     , `level` = ?3
                 ;
@@ -179,12 +177,12 @@ impl Level {
         sqlx::query_as!(
             Ancestry,
             r#"
-                SELECT a.`id` AS "id: uuid::Uuid"
+                SELECT `ancestry_id` AS "id: uuid::Uuid"
                     , `name`
-                FROM `ancestries` AS a
-                JOIN `ancestries_character_levels` AS a_c_l
-                    ON a.`id` = a_c_l.`ancestry_id`
-                WHERE a_c_l.`character_level_id` = ?1
+                FROM `ancestries`
+                JOIN `ancestries_character_levels`
+                    USING (`ancestry_id`)
+                WHERE `character_level_id` = ?1
                 ;
             "#,
             self.id
@@ -197,12 +195,12 @@ impl Level {
         sqlx::query_as!(
             Class,
             r#"
-                SELECT `id` AS "id: uuid::Uuid"
+                SELECT `class_id` AS "id: uuid::Uuid"
                     , `name`
-                FROM `classes` AS c
-                JOIN `character_levels_classes` AS c_l_c
-                    ON c.`id` = c_l_c.`class_id`
-                WHERE c_l_c.`character_level_id` = ?1
+                FROM `classes`
+                JOIN `character_levels_classes`
+                    USING (`class_id`)
+                WHERE `character_level_id` = ?1
                 ;
             "#,
             self.id
@@ -215,12 +213,12 @@ impl Level {
         sqlx::query_as!(
             Subclass,
             r#"
-                SELECT s.`id` AS "id: uuid::Uuid"
-                    , s.`name`
-                FROM `subclasses` AS s
-                JOIN `character_levels_subclasses` AS c_l_s
-                    ON s.`id` = c_l_s.`subclass_id`
-                WHERE c_l_s.`character_level_id` = ?1
+                SELECT `subclass_id` AS "id: uuid::Uuid"
+                    , `name`
+                FROM `subclasses`
+                JOIN `character_levels_subclasses`
+                    USING (`subclass_id`)
+                WHERE `character_level_id` = ?1
                 ;
             "#,
             self.id

@@ -15,9 +15,9 @@ impl Attribute {
         sqlx::query_as!(
             Attribute,
             r#"
-                SELECT `id` AS "id: uuid::Uuid", `name`
+                SELECT `attribute_id` AS "id: uuid::Uuid", `name`
                 FROM attributes 
-                WHERE `id` = ?
+                WHERE `attribute_id` = ?
                 LIMIT 1;
             "#,
             id
@@ -35,7 +35,7 @@ impl Attribute {
             r#"
                 INSERT INTO `attributes` VALUES
                 (?1, ?2)
-                ON CONFLICT (`id`) DO UPDATE
+                ON CONFLICT (`attribute_id`) DO UPDATE
                     SET `name` = ?2
                 ;
             "#,

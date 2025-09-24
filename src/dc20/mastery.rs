@@ -11,12 +11,11 @@ impl Mastery {
         sqlx::query_as!(
             Mastery,
             r#"
-                SELECT
-                    `id` AS "id: uuid::Uuid",
+                SELECT `mastery_id` AS "id: uuid::Uuid",
                     `name`,
                     `bonus` AS "bonus: u8"
                 FROM `masteries`
-                WHERE `id` = ?1
+                WHERE `mastery_id` = ?1
                 LIMIT 1;
             "#,
             id

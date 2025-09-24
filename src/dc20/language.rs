@@ -26,10 +26,10 @@ impl Language {
         sqlx::query_as!(
             Language,
             r#"
-                SELECT `id` AS "id: uuid::Uuid"
+                SELECT `language_id` AS "id: uuid::Uuid"
                     , `name`
                 FROM `languages`
-                WHERE `id` = ?1
+                WHERE `language_id` = ?1
                 LIMIT 1
                 ;
             "#,
@@ -48,7 +48,7 @@ impl Language {
             r#"
                 INSERT INTO `languages`
                 VALUES (?1, ?2)
-                ON CONFLICT (`id`) DO UPDATE
+                ON CONFLICT (`language_id`) DO UPDATE
                     SET `name` = ?2
                 ;
             "#,

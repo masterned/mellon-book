@@ -16,10 +16,13 @@ impl Skill {
         sqlx::query_as!(
             Skill,
             r#"
-                SELECT id AS "id: Uuid", name, attribute_id AS "attribute_id: Uuid"
+                SELECT `skill_id` AS "id: Uuid"
+                    , `name`
+                    , `attribute_id` AS "attribute_id: Uuid"
                 FROM skills
-                WHERE `id` = ?1
-                LIMIT 1;
+                WHERE `skill_id` = ?1
+                LIMIT 1
+                ;
             "#,
             id
         )
@@ -38,9 +41,9 @@ impl Skill {
 
         sqlx::query!(
             r#"
-                INSERT INTO skills (`id`, `name`, `attribute_id`)
+                INSERT INTO skills (`skill_id`, `name`, `attribute_id`)
                 VALUES ( ?1, ?2, ?3 )
-                ON CONFLICT(`id`) DO UPDATE SET
+                ON CONFLICT(`skill_id`) DO UPDATE SET
                     name = ?2,
                     attribute_id = ?3;
             "#,
@@ -62,10 +65,10 @@ impl Skill {
         sqlx::query_as!(
             Attribute,
             r#"
-                SELECT `id` AS "id: uuid::Uuid"
+                SELECT `attribute_id` AS "id: uuid::Uuid"
                     , `name`
                 FROM `attributes`
-                WHERE `id` = ?1
+                WHERE `attribute_id` = ?1
                 LIMIT 1
                 ;
             "#,

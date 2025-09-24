@@ -1,22 +1,22 @@
 INSERT INTO `players`
 VALUES (X'01991836ac9f75898eff73915fd87018', "Spencer Dent")
-ON CONFLICT (`id`) DO NOTHING
+ON CONFLICT (`player_id`) DO NOTHING
 ;
 
 INSERT INTO `characters`
 VALUES (X'01991836da1972298430f8ad85a67ee0', "Cygnus", X'01991836ac9f75898eff73915fd87018')
-ON CONFLICT (`id`) DO NOTHING
+ON CONFLICT (`character_id`) DO NOTHING
 ;
 
 INSERT INTO `ancestries`
 VALUES (X'0199182824927164b25d368464947b6a', "Human")
 , (X'019961a4e5427aeaa845989fe8f884c8', "Elf")
-ON CONFLICT (`id`) DO NOTHING
+ON CONFLICT (`ancestry_id`) DO NOTHING
 ;
 
 INSERT INTO `ancestry_traits`
 VALUES (X'01991828aa3c7fa9a24bc2afacaa349d', "Attribute Increase", "Choose an Attribute. The chosen Attribute increases by 1 (up to the Attribute Limit).", 2)
-ON CONFLICT (`id`) DO NOTHING
+ON CONFLICT (`ancestry_trait_id`) DO NOTHING
 ;
 
 INSERT INTO `ancestries_ancestry_traits`
@@ -30,7 +30,7 @@ VALUES (X'01993b832d6c7e7882b2063d613880b9', "Prime")
 , (X'01993b8460827289a9e9cc105341940e', "Agility")
 , (X'01993b84fcf17fcbb1fed093bfd9853d', "Charisma")
 , (X'01993b8556b4774aa4a333bd7f76469e', "Intelligence")
-ON CONFLICT (`id`) DO NOTHING
+ON CONFLICT (`attribute_id`) DO NOTHING
 ;
 
 INSERT INTO `classes`
@@ -49,7 +49,7 @@ VALUES (X'019964edee4b746ea5a85006d034d3ba', "Artificer")
 , (X'019964eec5df783bbf5365a4ba231213', "Spellblade")
 , (X'019964eecd22732fa0ab349338786aed', "Warlock")
 , (X'019964eed31576dea71821db96213fcd', "Wizard")
-ON CONFLICT (`id`) DO NOTHING
+ON CONFLICT (`class_id`) DO NOTHING
 ;
 
 INSERT INTO `classes_subclasses`
@@ -71,13 +71,13 @@ VALUES (X'01993a736a8577e183451a57d7c324de', "Awareness", X'01993b832d6c7e7882b2
 , (X'01993ea24cee74f9a1e9c9d10269ac62', "Investigation", X'01993b8460827289a9e9cc105341940e')
 , (X'01993ea27be07dbbbb8c2a79be9df862', "Medicine", X'01993b8460827289a9e9cc105341940e')
 , (X'01993ea29d2c70f9bc47df7378496cd0', "Survival", X'01993b8460827289a9e9cc105341940e')
-ON CONFLICT (`id`) DO NOTHING
+ON CONFLICT (`skill_id`) DO NOTHING
 ;
 
 INSERT INTO `subclasses`
 VALUES (X'019964f27af17574a82346e464d01aa7', "Oracle")
 , (X'019964f2835d7929bcdc10d1d9d93a5e', "Psi-Knight")
-ON CONFLICT (`id`) DO NOTHING
+ON CONFLICT (`subclass_id`) DO NOTHING
 ;
 
 INSERT INTO `trades`
@@ -109,7 +109,7 @@ VALUES (X'01993c6279d477f690568205594a194f', "Alchemy")
 , (X'01993c6482ea75b8894f17be262687bd', "Tinkering")
 , (X'01993c648fd470b48d6105d6b8f167af', "Weaving")
 , (X'01993c64a33878f9a402856d3704c9da', "Vehicles")
-ON CONFLICT (`id`) DO NOTHING
+ON CONFLICT (`trade_id`) DO NOTHING
 ;
 
 INSERT INTO `attributes_trades`
@@ -130,7 +130,7 @@ VALUES (X'01993c50621f720b98cc90eed9ddddea', "Novice", 2)
 , (X'01993c50b7e8763da96d47673a2e12c6', "Expert", 6)
 , (X'01993c50d7297fed893796dc5e928c04', "Master", 8)
 , (X'01993c50ed66774d913ae96abef0b500', "Grandmaster", 10)
-ON CONFLICT (`id`) DO NOTHING
+ON CONFLICT (`mastery_id`) DO NOTHING
 ;
 
 INSERT INTO `languages`
@@ -149,12 +149,12 @@ VALUES (X'01993e35ae3470bfb26e86f39c6b8d85', "Common")
 , (X'01993e9d5249721a93806cb086147cd9', "Celestial")
 , (X'01993e9d6d2d7b6dbff04da13988d0fe', "Fiend")
 , (X'01993e9d811f7c78b349e1b19561c220', "Deep Speech")
-ON CONFLICT (`id`) DO NOTHING
+ON CONFLICT (`language_id`) DO NOTHING
 ;
 
 INSERT INTO `backgrounds`
 VALUES (X'01993ea09d21764d9a0b98bb22b619ca', "Human Mercenary")
-ON CONFLICT (`id`) DO NOTHING
+ON CONFLICT (`background_id`) DO NOTHING
 ;
 
 INSERT INTO `backgrounds_languages`
@@ -179,7 +179,7 @@ INSERT INTO `character_levels`
 VALUES (X'01991836da1972298430f8ad85a67ee0', X'166ae11a3d404c618d390415e0cae6bb', 1)
 , (X'0199593b03087b8295403e4ed35c2cb6',X'166ae11a3d404c618d390415e0cae6bb', 3)
 , (X'0199593a64d37f6eafcff8363b19d41b', X'166ae11a3d404c618d390415e0cae6bb', 2)
-ON CONFLICT (`id`) DO NOTHING
+ON CONFLICT (`character_level_id`) DO NOTHING
 ;
 
 INSERT INTO `ancestries_character_levels`

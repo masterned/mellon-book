@@ -1,6 +1,6 @@
 table "players" {
   schema = schema.main
-  column "id" {
+  column "player_id" {
     null = false
     type = blob
   }
@@ -9,16 +9,16 @@ table "players" {
     type = text
   }
   primary_key {
-    columns = [column.id]
+    columns = [column.player_id]
   }
-  check "16 byte uuid" {
-    expr = "length(`id`) = 16"
+  check "16 byte player_id" {
+    expr = "length(`player_id`) = 16"
   }
   without_rowid = true
 }
 table "characters" {
   schema = schema.main
-  column "id" {
+  column "character_id" {
     null = false
     type = blob
   }
@@ -31,22 +31,22 @@ table "characters" {
     type = blob
   }
   primary_key {
-    columns = [column.id]
+    columns = [column.character_id]
   }
   foreign_key "creator_fk" {
     columns     = [column.creator_id]
-    ref_columns = [table.players.column.id]
+    ref_columns = [table.players.column.player_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
-  check "16 byte uuid" {
-    expr = "length(`id`) = 16"
+  check "16 byte character_id" {
+    expr = "length(`character_id`) = 16"
   }
   without_rowid = true
 }
 table "ancestries" {
   schema = schema.main
-  column "id" {
+  column "ancestry_id" {
     null = false
     type = blob
   }
@@ -55,16 +55,16 @@ table "ancestries" {
     type = text
   }
   primary_key {
-    columns = [column.id]
+    columns = [column.ancestry_id]
   }
-  check "16 byte uuid" {
-    expr = "length(`id`) = 16"
+  check "16 byte ancestry_id" {
+    expr = "length(`ancestry_id`) = 16"
   }
   without_rowid = true
 }
 table "ancestry_traits" {
   schema = schema.main
-  column "id" {
+  column "ancestry_trait_id" {
     null = false
     type = blob
   }
@@ -81,10 +81,10 @@ table "ancestry_traits" {
     type = integer
   }
   primary_key {
-    columns = [column.id]
+    columns = [column.ancestry_trait_id]
   }
-  check "16 byte uuid" {
-    expr = "length(`id`) = 16"
+  check "16 byte ancestry_trait_id" {
+    expr = "length(`ancestry_trait_id`) = 16"
   }
   without_rowid = true
 }
@@ -108,20 +108,20 @@ table "ancestries_ancestry_traits" {
   }
   foreign_key "ancestry_trait_fk" {
     columns     = [column.ancestry_trait_id]
-    ref_columns = [table.ancestry_traits.column.id]
+    ref_columns = [table.ancestry_traits.column.ancestry_trait_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
   foreign_key "ancestry_fk" {
     columns     = [column.ancestry_id]
-    ref_columns = [table.ancestries.column.id]
+    ref_columns = [table.ancestries.column.ancestry_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
 }
 table "character_levels" {
   schema = schema.main
-  column "id" {
+  column "character_level_id" {
     null = false
     type = blob
   }
@@ -134,16 +134,16 @@ table "character_levels" {
     type = integer
   }
   primary_key {
-    columns = [column.id]
+    columns = [column.character_level_id]
   }
   foreign_key "character_fk" {
     columns     = [column.character_id]
-    ref_columns = [table.characters.column.id]
+    ref_columns = [table.characters.column.character_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
-  check "16 byte uuid" {
-    expr = "length(`id`) = 16"
+  check "16 byte character_level_id" {
+    expr = "length(`character_level_id`) = 16"
   }
   index "character_levels_character_level_uniq" {
     unique  = true
@@ -166,13 +166,13 @@ table "ancestries_character_levels" {
   }
   foreign_key "ancestry_fk" {
     columns     = [column.ancestry_id]
-    ref_columns = [table.ancestries.column.id]
+    ref_columns = [table.ancestries.column.ancestry_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
   foreign_key "character_level_fk" {
     columns     = [column.character_level_id]
-    ref_columns = [table.character_levels.column.id]
+    ref_columns = [table.character_levels.column.character_level_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
@@ -199,20 +199,20 @@ table "ancestry_traits_character_levels" {
   }
   foreign_key "character_level_fk" {
     columns     = [column.character_level_id]
-    ref_columns = [table.character_levels.column.id]
+    ref_columns = [table.character_levels.column.character_level_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
   foreign_key "ancestry_trait_fk" {
     columns     = [column.ancestry_trait_id]
-    ref_columns = [table.ancestry_traits.column.id]
+    ref_columns = [table.ancestry_traits.column.ancestry_trait_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
 }
 table "classes" {
   schema = schema.main
-  column "id" {
+  column "class_id" {
     null = false
     type = blob
   }
@@ -221,10 +221,10 @@ table "classes" {
     type = text
   }
   primary_key {
-    columns = [column.id]
+    columns = [column.class_id]
   }
-  check "16 byte id" {
-    expr = "length(`id`) = 16"
+  check "16 byte class_id" {
+    expr = "length(`class_id`) = 16"
   }
   check "non-blank name" {
     expr = "`name` != \"\""
@@ -232,7 +232,7 @@ table "classes" {
 }
 table "subclasses" {
   schema = schema.main
-  column "id" {
+  column "subclass_id" {
     null = false
     type = blob
   }
@@ -241,10 +241,10 @@ table "subclasses" {
     type = text
   }
   primary_key {
-    columns = [column.id]
+    columns = [column.subclass_id]
   }
-  check "16 byte id" {
-    expr = "length(`id`) = 16"
+  check "16 byte subclass_id" {
+    expr = "length(`subclass_id`) = 16"
   }
   check "non-blank name" {
     expr = "`name` != \"\""
@@ -265,13 +265,13 @@ table "classes_subclasses" {
   }
   foreign_key "class_fk" {
     columns     = [column.class_id]
-    ref_columns = [table.classes.column.id]
+    ref_columns = [table.classes.column.class_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
   foreign_key "subclass_fk" {
     columns     = [column.subclass_id]
-    ref_columns = [table.subclasses.column.id]
+    ref_columns = [table.subclasses.column.subclass_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
@@ -297,13 +297,13 @@ table "backgrounds_character_levels" {
   }
   foreign_key "background_fk" {
     columns     = [column.background_id]
-    ref_columns = [table.backgrounds.column.id]
+    ref_columns = [table.backgrounds.column.background_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
   foreign_key "character_level_fk" {
     columns     = [column.character_level_id]
-    ref_columns = [table.character_levels.column.id]
+    ref_columns = [table.character_levels.column.character_level_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
@@ -323,13 +323,13 @@ table "character_levels_classes" {
   }
   foreign_key "character_level_fk" {
     columns     = [column.character_level_id]
-    ref_columns = [table.character_levels.column.id]
+    ref_columns = [table.character_levels.column.character_level_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
   foreign_key "class_fk" {
     columns     = [column.class_id]
-    ref_columns = [table.classes.column.id]
+    ref_columns = [table.classes.column.class_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
@@ -355,13 +355,13 @@ table "character_levels_subclasses" {
   }
   foreign_key "character_level_fk" {
     columns     = [column.character_level_id]
-    ref_columns = [table.character_levels.column.id]
+    ref_columns = [table.character_levels.column.character_level_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
   foreign_key "subclass_fk" {
     columns     = [column.subclass_id]
-    ref_columns = [table.subclasses.column.id]
+    ref_columns = [table.subclasses.column.subclass_id]
     on_update   = NO_ACTION
     on_delete   = CASCADE
   }
@@ -374,7 +374,7 @@ table "character_levels_subclasses" {
 }
 table "attributes" {
   schema = schema.main
-  column "id" {
+  column "attribute_id" {
     type = blob
     null = false
   }
@@ -383,15 +383,15 @@ table "attributes" {
     null = false
   }
   primary_key {
-    columns = [column.id]
+    columns = [column.attribute_id]
   }
-  check "16 byte id" {
-    expr = "length(`id`) = 16"
+  check "16 byte attribute_id" {
+    expr = "length(`attribute_id`) = 16"
   }
 }
 table "skills" {
   schema = schema.main
-  column "id" {
+  column "skill_id" {
     type = blob
     null = false
   }
@@ -404,16 +404,16 @@ table "skills" {
     null = false
   }
   primary_key {
-    columns = [column.id]
+    columns = [column.skill_id]
   }
   foreign_key "attribute_fk" {
     columns = [column.attribute_id]
-    ref_columns = [table.attributes.column.id]
+    ref_columns = [table.attributes.column.attribute_id]
     on_update = NO_ACTION
     on_delete = CASCADE
   }
-  check "16 byte id" {
-    expr = "length(`id`) = 16"
+  check "16 byte skill_id" {
+    expr = "length(`skill_id`) = 16"
   }
   check "16 byte attribute_id" {
     expr = "length(`attribute_id`) = 16"
@@ -422,7 +422,7 @@ table "skills" {
 }
 table "trades" {
   schema = schema.main
-  column "id" {
+  column "trade_id" {
     type = blob
     null = false
   }
@@ -431,10 +431,10 @@ table "trades" {
     null = false
   }
   primary_key {
-    columns = [column.id]
+    columns = [column.trade_id]
   }
-  check "16 byte id" {
-    expr = "length(`id`) = 16"
+  check "16 byte trade_id" {
+    expr = "length(`trade_id`) = 16"
   }
   without_rowid = true
 }
@@ -453,13 +453,13 @@ table "attributes_trades" {
   }
   foreign_key "attribute_fk" {
     columns = [column.attribute_id]
-    ref_columns = [table.attributes.column.id]
+    ref_columns = [table.attributes.column.attribute_id]
     on_update = NO_ACTION
     on_delete = CASCADE
   }
   foreign_key "trade_fk" {
     columns = [column.trade_id]
-    ref_columns = [table.trades.column.id]
+    ref_columns = [table.trades.column.trade_id]
     on_update = NO_ACTION
     on_delete = CASCADE
   }
@@ -472,7 +472,7 @@ table "attributes_trades" {
 }
 table "masteries" {
   schema = schema.main
-  column "id" {
+  column "mastery_id" {
     type = blob
     null = false
   }
@@ -485,16 +485,16 @@ table "masteries" {
     null = false
   }
   primary_key {
-    columns = [column.id]
+    columns = [column.mastery_id]
   }
-  check "16 byte id" {
-    expr = "length(`id`) = 16"
+  check "16 byte mastery_id" {
+    expr = "length(`mastery_id`) = 16"
   }
   without_rowid = true
 }
 table "languages" {
   schema = schema.main
-  column "id" {
+  column "language_id" {
     type = blob
     null = false
   }
@@ -503,16 +503,16 @@ table "languages" {
     null = false
   }
   primary_key {
-    columns = [column.id]
+    columns = [column.language_id]
   }
-  check "16 byte id" {
-    expr = "length(`id`) = 16"
+  check "16 byte language_id" {
+    expr = "length(`language_id`) = 16"
   }
   without_rowid = true
 }
 table "backgrounds" {
   schema = schema.main
-  column "id" {
+  column "background_id" {
     type = blob
     null = false
   }
@@ -521,10 +521,10 @@ table "backgrounds" {
     null = false
   }
   primary_key {
-    columns = [column.id]
+    columns = [column.background_id]
   }
-  check "16 byte id" {
-    expr = "length(`id`) = 16"
+  check "16 byte background_id" {
+    expr = "length(`background_id`) = 16"
   }
   without_rowid = true
 }
@@ -547,13 +547,13 @@ table "backgrounds_languages" {
   }
   foreign_key "background_fk" {
     columns = [column.background_id]
-    ref_columns = [table.backgrounds.column.id]
+    ref_columns = [table.backgrounds.column.background_id]
     on_update = NO_ACTION
     on_delete = CASCADE
   }
   foreign_key "language_fk" {
     columns = [column.language_id]
-    ref_columns = [table.languages.column.id]
+    ref_columns = [table.languages.column.language_id]
     on_update = NO_ACTION
     on_delete = CASCADE
   }
@@ -583,13 +583,13 @@ table "backgrounds_skills" {
   }
   foreign_key "background_fk" {
     columns = [column.background_id]
-    ref_columns = [table.backgrounds.column.id]
+    ref_columns = [table.backgrounds.column.background_id]
     on_update = NO_ACTION
     on_delete = CASCADE
   }
   foreign_key "skill_fk" {
     columns = [column.skill_id]
-    ref_columns = [table.skills.column.id]
+    ref_columns = [table.skills.column.skill_id]
     on_update = NO_ACTION
     on_delete = CASCADE
   }
@@ -616,13 +616,13 @@ table "backgrounds_trades" {
   }
   foreign_key "background_fk" {
     columns = [column.background_id]
-    ref_columns = [table.backgrounds.column.id]
+    ref_columns = [table.backgrounds.column.background_id]
     on_update = NO_ACTION
     on_delete = CASCADE
   }
   foreign_key "trade_fk" {
     columns = [column.trade_id]
-    ref_columns = [table.trades.column.id]
+    ref_columns = [table.trades.column.trade_id]
     on_update = NO_ACTION
     on_delete = CASCADE
   }
