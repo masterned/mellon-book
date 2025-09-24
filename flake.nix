@@ -3,55 +3,75 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
-    naersk.url = "github:nix-community/naersk";
+    naersk = {
+      url = "github:nix-community/naersk";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+      };
+    };
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
   outputs =
-    { nixpkgs, naersk, ... }:
-    let
-      pkgs = nixpkgs.legacyPackages."x86_64-linux";
-      naerskLib = pkgs.callPackage naersk { };
-    in
     {
-
-      devShells."x86_64-linux".default = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          atlas
-          bacon
-          cargo
-          clippy
-          git
-          openssl
-          rustc
-          rustfmt
-          rust-analyzer
-          sqlite
-          sqlx-cli
-          terraform-ls
-        ];
-
-        nativeBuildInputs = with pkgs; [
-          pkg-config
-        ];
-
-        env = {
-          RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
-        };
-
-        shellHook = ''
-          export DATABASE_URL="sqlite://$(git rev-parse --show-toplevel)/database.db";
-        '';
-      };
-
-      packages."x86_64-linux".default = naerskLib.buildPackage {
+      nixpkgs,
+      naersk,
+      flake-utils,
+      ...
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
         name = "mellon-book";
         src = ./.;
-        buildInputs = with pkgs; [
-          openssl
-        ];
-        nativeBuildInputs = with pkgs; [
-          pkg-config
-        ];
-      };
-    };
+        pkgs = import nixpkgs {
+          inherit system;
+        };
+        naerskLib = pkgs.callPackage naersk { };
+      in
+      with pkgs;
+      {
+        devShells.default = mkShell {
+          buildInputs = [
+            atlas
+            bacon
+            cargo
+            clippy
+            git
+            openssl
+            rustc
+            rustfmt
+            rust-analyzer
+            sqlite
+            sqlx-cli
+            terraform-ls
+          ];
+
+          nativeBuildInputs = [
+            pkg-config
+          ];
+
+          env = {
+            RUST_SRC_PATH = "${rust.packages.stable.rustPlatform.rustLibSrc}";
+          };
+
+          shellHook = ''
+            export DATABASE_URL="sqlite://$(git rev-parse --show-toplevel)/database.db";
+          '';
+        };
+
+        packages = {
+          default = naerskLib.buildPackage {
+            inherit system name src;
+            buildInputs = [
+              openssl
+              sqlite
+            ];
+            nativeBuildInputs = [
+              pkg-config
+            ];
+          };
+        };
+      }
+    );
 }
