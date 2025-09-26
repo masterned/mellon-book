@@ -2,7 +2,7 @@ use std::{error::Error, fmt, str::FromStr};
 
 use turann::Builder;
 
-use crate::dc20::{Level, Skill};
+use crate::dc20::{Defense, Level, Skill};
 
 #[derive(Builder, Debug, Clone, PartialEq, Eq)]
 pub struct Attribute {
@@ -90,34 +90,56 @@ impl FromStr for AttributeName {
     }
 }
 
-#[derive(Builder, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Attributes {
-    prime: AttributeLevel,
-    might: AttributeLevel,
-    agility: AttributeLevel,
-    charisma: AttributeLevel,
-    intelligence: AttributeLevel,
+    pub prime: i64,
+    pub might: i64,
+    pub agility: i64,
+    pub charisma: i64,
+    pub intelligence: i64,
 }
 
 impl Attributes {
-    pub fn prime(&self) -> &AttributeLevel {
-        &self.prime
+    pub fn prime(&self) -> i64 {
+        self.prime
     }
 
-    pub fn might(&self) -> &AttributeLevel {
-        &self.might
+    pub fn might(&self) -> i64 {
+        self.might
     }
 
-    pub fn agility(&self) -> &AttributeLevel {
-        &self.agility
+    pub fn agility(&self) -> i64 {
+        self.agility
     }
 
-    pub fn charisma(&self) -> &AttributeLevel {
-        &self.charisma
+    pub fn charisma(&self) -> i64 {
+        self.charisma
     }
 
-    pub fn intelligence(&self) -> &AttributeLevel {
-        &self.intelligence
+    pub fn intelligence(&self) -> i64 {
+        self.intelligence
+    }
+
+    #[must_use]
+    pub fn precision_defense(&self, combat_mastery: usize) -> Defense {
+        let agility = self.agility as usize;
+        let intelligence = self.intelligence as usize;
+
+        Defense {
+            score: 8 + combat_mastery + agility + intelligence,
+            reduction: 0,
+        }
+    }
+
+    #[must_use]
+    pub fn area_defense(&self, combat_mastery: usize) -> Defense {
+        let might = self.might as usize;
+        let charisma = self.charisma as usize;
+
+        Defense {
+            score: 8 + combat_mastery + might + charisma,
+            reduction: 0,
+        }
     }
 }
 

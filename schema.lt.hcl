@@ -634,5 +634,42 @@ table "backgrounds_trades" {
   }
   without_rowid = true
 }
+table "character_level_base_attribute_values" {
+  schema = schema.main
+  column "character_level_id" {
+    type = blob
+    null = false
+  }
+  column "attribute_id" {
+    type = blob
+    null = false
+  }
+  column "value" {
+    type = int
+    null = false
+  }
+  primary_key {
+    columns = [column.character_level_id, column.attribute_id]
+  }
+  foreign_key "character_level_fk" {
+    columns = [column.character_level_id]
+    ref_columns = [table.character_levels.column.character_level_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  foreign_key "attribute_fk" {
+    columns = [column.attribute_id]
+    ref_columns = [table.attributes.column.attribute_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  check "16 byte character_level_id" {
+    expr = "length(`character_level_id`) = 16"
+  }
+  check "16 byte attribute_id" {
+    expr = "length(`attribute_id`) = 16"
+  }
+  without_rowid = true
+}
 schema "main" {
 }

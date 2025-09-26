@@ -1,3 +1,59 @@
+CREATE VIEW IF NOT EXISTS `character_level_attributes`
+    ( `character_level_id`
+    , `prime`
+    , `might`
+    , `agility`
+    , `charisma`
+    , `intelligence`
+    )
+AS
+SELECT `character_level_id`
+    , `prime`
+    , `might`
+    , `agility`
+    , `charisma`
+    , `intelligence`
+FROM
+    (SELECT `character_level_id`
+        , `value` as "prime"
+    FROM `character_level_base_attribute_values`
+    JOIN `attributes`
+    USING (`attribute_id`)
+    WHERE `name` LIKE "%Prime%")
+    JOIN
+    ( SELECT `character_level_id`
+        , `value` as "might"
+    FROM `character_level_base_attribute_values`
+    JOIN `attributes`
+    USING (`attribute_id`)
+    WHERE `name` LIKE "%Might%"
+    ) USING (`character_level_id`)
+    JOIN
+    ( SELECT `character_level_id`
+        , `value` as "agility"
+    FROM `character_level_base_attribute_values`
+    JOIN `attributes`
+    USING (`attribute_id`)
+    WHERE `name` LIKE "%Agility%"
+    ) USING (`character_level_id`)
+    JOIN
+    (SELECT `character_level_id`
+        , `value` as "charisma"
+    FROM `character_level_base_attribute_values`
+    JOIN `attributes`
+    USING (`attribute_id`)
+    WHERE `name` LIKE "%Charisma%"
+    ) USING (`character_level_id`)
+    JOIN
+    (SELECT `character_level_id`
+        , `value` as "intelligence"
+    FROM `character_level_base_attribute_values`
+    JOIN `attributes`
+    USING (`attribute_id`)
+    WHERE `name` LIKE "%Intelligence%"
+    ) USING (`character_level_id`)
+;
+
 INSERT INTO `players`
 VALUES (X'01991836ac9f75898eff73915fd87018', "Spencer Dent")
 ON CONFLICT (`player_id`) DO NOTHING
@@ -177,8 +233,8 @@ ON CONFLICT (`background_id`, `trade_id`) DO NOTHING
 
 INSERT INTO `character_levels`
 VALUES (X'01991836da1972298430f8ad85a67ee0', X'166ae11a3d404c618d390415e0cae6bb', 1)
-, (X'0199593b03087b8295403e4ed35c2cb6',X'166ae11a3d404c618d390415e0cae6bb', 3)
 , (X'0199593a64d37f6eafcff8363b19d41b', X'166ae11a3d404c618d390415e0cae6bb', 2)
+, (X'0199593b03087b8295403e4ed35c2cb6',X'166ae11a3d404c618d390415e0cae6bb', 3)
 ON CONFLICT (`character_level_id`) DO NOTHING
 ;
 
@@ -201,4 +257,25 @@ ON CONFLICT (`character_level_id`, `class_id`) DO NOTHING
 INSERT INTO `character_levels_subclasses`
 VALUES (X'0199593b03087b8295403e4ed35c2cb6', X'019964f2835d7929bcdc10d1d9d93a5e')
 ON CONFLICT (`character_level_id`, `subclass_id`) DO NOTHING
+;
+
+-- 01993b832d6c7e7882b2063d613880b9
+INSERT INTO `character_level_base_attribute_values`
+    (`character_level_id`, `attribute_id`, `value`)
+VALUES (X'01991836da1972298430f8ad85a67ee0', X'01993b832d6c7e7882b2063d613880b9', 3)
+, (X'01991836da1972298430f8ad85a67ee0', X'01993b83e9f978d4a5ae97c2011f49c6', 0)
+, (X'01991836da1972298430f8ad85a67ee0', X'01993b8460827289a9e9cc105341940e', 1)
+, (X'01991836da1972298430f8ad85a67ee0', X'01993b84fcf17fcbb1fed093bfd9853d', 0)
+, (X'01991836da1972298430f8ad85a67ee0', X'01993b8556b4774aa4a333bd7f76469e', 3)
+, (X'0199593a64d37f6eafcff8363b19d41b', X'01993b832d6c7e7882b2063d613880b9', 3)
+, (X'0199593a64d37f6eafcff8363b19d41b', X'01993b83e9f978d4a5ae97c2011f49c6', 0)
+, (X'0199593a64d37f6eafcff8363b19d41b', X'01993b8460827289a9e9cc105341940e', 1)
+, (X'0199593a64d37f6eafcff8363b19d41b', X'01993b84fcf17fcbb1fed093bfd9853d', 0)
+, (X'0199593a64d37f6eafcff8363b19d41b', X'01993b8556b4774aa4a333bd7f76469e', 3)
+, (X'0199593b03087b8295403e4ed35c2cb6', X'01993b832d6c7e7882b2063d613880b9', 3)
+, (X'0199593b03087b8295403e4ed35c2cb6', X'01993b83e9f978d4a5ae97c2011f49c6', 0)
+, (X'0199593b03087b8295403e4ed35c2cb6', X'01993b8460827289a9e9cc105341940e', 1)
+, (X'0199593b03087b8295403e4ed35c2cb6', X'01993b84fcf17fcbb1fed093bfd9853d', 0)
+, (X'0199593b03087b8295403e4ed35c2cb6', X'01993b8556b4774aa4a333bd7f76469e', 3)
+ON CONFLICT (`character_level_id`, `attribute_id`) DO NOTHING
 ;

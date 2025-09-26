@@ -39,45 +39,24 @@ async fn main() -> anyhow::Result<()> {
         .character_name("Cygnus")
         .ancestry_trait(undying)
         .background(background)
-        .attributes(
-            Attributes::builder()
-                .prime(AttributeLevel {
-                    base_score: 4,
-                    save_proficiency: false,
-                    skills: vec![],
-                })
-                .might(AttributeLevel {
-                    base_score: 0,
-                    save_proficiency: false,
-                    skills: vec![],
-                })
-                .agility(AttributeLevel {
-                    base_score: 1,
-                    save_proficiency: true,
-                    skills: vec![],
-                })
-                .charisma(AttributeLevel::new().with_base_score(0))
-                .intelligence(
-                    AttributeLevel::new()
-                        .with_base_score(3)
-                        .with_save_proficiency(),
-                )
-                .build()?,
-        )
         .build()?;
 
     println!("{character:#?}");
 
-    let level = character.load_max_level(&pool).await?;
+    let level = character.load_level(&pool, 3).await?;
     println!("{level:#?}");
+
+    let attributes = level.load_base_attributes(&pool).await?;
+
+    println!("{attributes:#?}");
 
     println!(
         "PD: {:#?}",
-        character.precision_defense(level.calc_combat_mastery())
+        attributes.precision_defense(level.calc_combat_mastery())
     );
     println!(
         "AD: {:#?}",
-        character.area_defense(level.calc_combat_mastery())
+        attributes.area_defense(level.calc_combat_mastery())
     );
 
     let ancestries = level.load_ancestries(&pool).await?;
@@ -96,7 +75,6 @@ async fn main() -> anyhow::Result<()> {
 
     let background = character.background();
 
-    // TODO: show language fluencies associated w/ background
     println!(
         "{} Languages: {:#?}",
         background.name,

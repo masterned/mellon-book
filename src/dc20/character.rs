@@ -15,7 +15,6 @@ pub struct Character {
     #[builder(each = "ancestry_trait")]
     ancestry_traits: Vec<AncestryTrait>,
     background: Background,
-    attributes: Attributes,
 }
 
 impl Character {
@@ -77,33 +76,13 @@ impl Character {
         .fetch_one(pool)
         .await
     }
+}
 
-    #[must_use]
-    pub fn attributes(&self) -> &Attributes {
-        &self.attributes
-    }
-
-    #[must_use]
-    pub fn precision_defense(&self, combat_mastery: usize) -> Defense {
-        let agility = self.attributes.agility().base_score as usize;
-        let intelligence = self.attributes.intelligence().base_score as usize;
-
-        Defense {
-            score: 8 + combat_mastery + agility + intelligence,
-            reduction: 0,
-        }
-    }
-
-    #[must_use]
-    pub fn area_defense(&self, combat_mastery: usize) -> Defense {
-        let might = self.attributes.might().base_score as usize;
-        let charisma = self.attributes.might().base_score as usize;
-
-        Defense {
-            score: 8 + combat_mastery + might + charisma,
-            reduction: 0,
-        }
-    }
+#[derive(Clone, Debug, PartialEq)]
+pub struct BaseAttributeValue {
+    pub character_level_id: uuid::Uuid,
+    pub attribute_id: uuid::Uuid,
+    pub value: i32,
 }
 
 #[derive(Builder, Clone, Debug, PartialEq, PartialOrd)]
@@ -188,6 +167,24 @@ impl Level {
             self.id
         )
         .fetch_all(pool)
+        .await
+    }
+
+    pub async fn load_base_attributes(&self, pool: &sqlx::SqlitePool) -> sqlx::Result<Attributes> {
+        sqlx::query_as!(
+            Attributes,
+            r#"
+                SELECT `prime`
+                    , `might`
+                    , `agility`
+                    , `charisma`
+                    , `intelligence`
+                FROM `character_level_attributes`
+                WHERE `character_level_id` = ?1
+            "#,
+            self.id
+        )
+        .fetch_one(pool)
         .await
     }
 
@@ -309,22 +306,9 @@ mod tests {
 
         let soldier = Background::builder().name("Soldier")?.build()?;
 
-        let attributes = Attributes::builder()
-            .prime(
-                AttributeLevel::new()
-                    .with_base_score(3)
-                    .with_skill(Skill::builder().name("Perception").build()?),
-            )
-            .might(AttributeLevel::default())
-            .agility(AttributeLevel::default())
-            .charisma(AttributeLevel::default())
-            .intelligence(AttributeLevel::default())
-            .build()?;
-
         builder
             .character_name("Johannas Doeworth")
-            .background(soldier.clone())
-            .attributes(attributes.clone());
+            .background(soldier.clone());
         let mut character = builder.build()?;
 
         let char_id = Uuid::new_v4();
@@ -338,7 +322,6 @@ mod tests {
                 character_name: "Johannas Doeworth".to_string(),
                 ancestry_traits: vec![],
                 background: soldier,
-                attributes,
             }
         );
 
