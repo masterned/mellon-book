@@ -2,7 +2,7 @@ use turann::Builder;
 use uuid::Uuid;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum SpellFamily {
+pub enum SpellSchool {
     Conjuration,
     Divination,
     Enchantment,
@@ -56,7 +56,7 @@ pub struct Spell {
     #[builder(default = Uuid::new_v4)]
     pub uuid: Uuid,
     pub name: String,
-    pub family: Option<SpellFamily>,
+    pub family: Option<SpellSchool>,
     #[builder(each = "cost")]
     pub cost: Vec<Points>,
     pub range: Range,

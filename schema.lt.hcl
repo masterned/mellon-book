@@ -702,7 +702,7 @@ table "spells" {
     type = text
     null = false
   }
-  column "spell_family_id" {
+  column "spell_school_id" {
     type = blob
     null = false
   }
@@ -741,9 +741,9 @@ table "spells" {
   primary_key {
     columns = [column.spell_id]
   }
-  foreign_key "spell_family_fk" {
-    columns = [column.spell_family_id]
-    ref_columns = [table.spell_families.column.spell_family_id]
+  foreign_key "spell_school_fk" {
+    columns = [column.spell_school_id]
+    ref_columns = [table.spell_schools.column.spell_school_id]
     on_update = NO_ACTION
     on_delete = CASCADE
   }
@@ -753,8 +753,8 @@ table "spells" {
   check "non-blank name" {
     expr = "`name` != \"\""
   }
-  check "16 byte spell_family_id" {
-    expr = "length(`spell_family_id`) = 16"
+  check "16 byte spell_school_id" {
+    expr = "length(`spell_school_id`) = 16"
   }
   check "non-blank range" {
     expr = "`range` != \"\""
@@ -805,9 +805,9 @@ table "spell_material_components" {
   }
   without_rowid = true
 }
-table "spell_families" {
+table "spell_schools" {
   schema = schema.main
-  column "spell_family_id" {
+  column "spell_school_id" {
     type = blob
     null = false
   }
@@ -816,10 +816,10 @@ table "spell_families" {
     null = false
   }
   primary_key {
-    columns = [column.spell_family_id]
+    columns = [column.spell_school_id]
   }
-  check "16 byte spell_family_id" {
-    expr = "length(`spell_family_id`) = 16"
+  check "16 byte spell_school_id" {
+    expr = "length(`spell_school_id`) = 16"
   }
   check "non-blank name" {
     expr = "`name` != \"\""

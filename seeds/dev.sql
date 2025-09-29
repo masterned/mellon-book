@@ -280,14 +280,14 @@ VALUES (X'01991836da1972298430f8ad85a67ee0', X'01993b832d6c7e7882b2063d613880b9'
 ON CONFLICT (`character_level_id`, `attribute_id`) DO NOTHING
 ;
 
-INSERT INTO `spell_families`
-    (`spell_family_id`, `name`)
+INSERT INTO `spell_schools`
+    (`spell_school_id`, `name`)
 VALUES (X'01999676d58d7840b02951505eb57504', "Destruction")
-ON CONFLICT (`spell_family_id`) DO NOTHING
+ON CONFLICT (`spell_school_id`) DO NOTHING
 ;
 
 INSERT INTO `spells`
-    (`spell_id`, `name`, `spell_family_id`, `action_point_cost`, `mana_point_cost`, `range`, `duration`, `description`)
+    (`spell_id`, `name`, `spell_school_id`, `action_point_cost`, `mana_point_cost`, `range`, `duration`, `description`)
 VALUES (X'0199967326fe7954825fbbc78d2300a2', "Fire Bolt", X'01999676d58d7840b02951505eb57504', 1, 0, "10 Spaces", "Instant", "You can make a Spell Check against the PD of a target within range. Hit: The target takes 2 Fire damage.")
 ON CONFLICT (`spell_id`) DO NOTHING
 ;
