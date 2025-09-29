@@ -279,3 +279,40 @@ VALUES (X'01991836da1972298430f8ad85a67ee0', X'01993b832d6c7e7882b2063d613880b9'
 , (X'0199593b03087b8295403e4ed35c2cb6', X'01993b8556b4774aa4a333bd7f76469e', 3)
 ON CONFLICT (`character_level_id`, `attribute_id`) DO NOTHING
 ;
+
+INSERT INTO `spell_families`
+    (`spell_family_id`, `name`)
+VALUES (X'01999676d58d7840b02951505eb57504', "Destruction")
+ON CONFLICT (`spell_family_id`) DO NOTHING
+;
+
+INSERT INTO `spells`
+    (`spell_id`, `name`, `spell_family_id`, `action_point_cost`, `mana_point_cost`, `range`, `duration`, `description`)
+VALUES (X'0199967326fe7954825fbbc78d2300a2', "Fire Bolt", X'01999676d58d7840b02951505eb57504', 1, 0, "10 Spaces", "Instant", "You can make a Spell Check against the PD of a target within range. Hit: The target takes 2 Fire damage.")
+ON CONFLICT (`spell_id`) DO NOTHING
+;
+
+INSERT INTO `spell_lists`
+    (`spell_list_id`, `name`)
+VALUES (X'01999679b6397fdf9dafaf18ce8ba4ef', "Arcane")
+, (X'01999679f92373b19969345c1d68c409', "Primal")
+, (X'0199967a1e3e74c884153d81011de5a2', "Divine")
+ON CONFLICT (`spell_list_id`) DO NOTHING
+;
+
+INSERT INTO `spells_spell_lists`
+VALUES (X'0199967326fe7954825fbbc78d2300a2', X'01999679b6397fdf9dafaf18ce8ba4ef')
+, (X'0199967326fe7954825fbbc78d2300a2', X'01999679f92373b19969345c1d68c409')
+ON CONFLICT (`spell_id`, `spell_list_id`) DO NOTHING
+;
+
+INSERT INTO `spell_tags`
+VALUES (X'0199968302bc78d9a245f312ddecb3e6', "Cantrip")
+, (X'0199968323f37a34bee4ab00d551238d', "Ritual")
+ON CONFLICT (`spell_tag_id`) DO NOTHING
+;
+
+INSERT INTO `spells_spell_tags`
+VALUES (X'0199967326fe7954825fbbc78d2300a2', X'0199968302bc78d9a245f312ddecb3e6')
+ON CONFLICT (`spell_id`, `spell_tag_id`) DO NOTHING
+;

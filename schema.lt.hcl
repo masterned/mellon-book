@@ -671,5 +671,268 @@ table "character_level_base_attribute_values" {
   }
   without_rowid = true
 }
+table "items" {
+  schema = schema.main
+  column "item_id" {
+    type = blob
+    null = false
+  }
+  column "name" {
+    type = text
+    null = false
+  }
+  primary_key {
+    columns = [column.item_id]
+  }
+  check "16 byte item_id" {
+    expr = "length(`item_id`) = 16"
+  }
+  check "non-blank name" {
+    expr = "`name` != \"\""
+  }
+  without_rowid = true
+}
+table "spells" {
+  schema = schema.main
+  column "spell_id" {
+    type = blob
+    null = false
+  }
+  column "name" {
+    type = text
+    null = false
+  }
+  column "spell_family_id" {
+    type = blob
+    null = false
+  }
+  column "has_verbal" {
+    type = boolean
+    null = false
+    default = false
+  }
+  column "has_somatic" {
+    type = boolean
+    null = false
+    default = false
+  }
+  column "action_point_cost" {
+    type = integer
+    null = false
+    default = 1
+  }
+  column "mana_point_cost" {
+    type = integer
+    null = false
+    default = 0
+  }
+  column "range" {
+    type = text
+    null = false
+  }
+  column "duration" {
+    type = text
+    null = false
+  }
+  column "description" {
+    type = text
+    null = false
+  }
+  primary_key {
+    columns = [column.spell_id]
+  }
+  foreign_key "spell_family_fk" {
+    columns = [column.spell_family_id]
+    ref_columns = [table.spell_families.column.spell_family_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  check "16 byte spell_id" {
+    expr = "length(`spell_id`) = 16"
+  }
+  check "non-blank name" {
+    expr = "`name` != \"\""
+  }
+  check "16 byte spell_family_id" {
+    expr = "length(`spell_family_id`) = 16"
+  }
+  check "non-blank range" {
+    expr = "`range` != \"\""
+  }
+  check "non-blank duration" {
+    expr = "`duration` != \"\""
+  }
+  check "non-blank description" {
+    expr = "`description` != \"\""
+  }
+  without_rowid = true
+}
+table "spell_material_components" {
+  schema = schema.main
+  column "spell_id" {
+    type = blob
+    null = false
+  }
+  column "item_id" {
+    type = blob
+    null = false
+  }
+  column "consumed" {
+    type = boolean
+    null = false
+    default = false
+  }
+  primary_key {
+    columns = [column.spell_id, column.item_id]
+  }
+  foreign_key "spell_fk" {
+    columns = [column.spell_id]
+    ref_columns = [table.spells.column.spell_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  foreign_key "item_fk" {
+    columns = [column.item_id]
+    ref_columns = [table.items.column.item_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  check "16 byte spell_id" {
+    expr = "length(`spell_id`) = 16"
+  }
+  check "16 byte item_id" {
+    expr = "length(`item_id`) = 16"
+  }
+  without_rowid = true
+}
+table "spell_families" {
+  schema = schema.main
+  column "spell_family_id" {
+    type = blob
+    null = false
+  }
+  column "name" {
+    type = text
+    null = false
+  }
+  primary_key {
+    columns = [column.spell_family_id]
+  }
+  check "16 byte spell_family_id" {
+    expr = "length(`spell_family_id`) = 16"
+  }
+  check "non-blank name" {
+    expr = "`name` != \"\""
+  }
+  without_rowid = true
+}
+table "spell_tags" {
+  schema = schema.main
+  column "spell_tag_id" {
+    type = blob
+    null = false
+  }
+  column "name" {
+    type = text
+    null = false
+  }
+  primary_key {
+    columns = [column.spell_tag_id]
+  }
+  check "16 byte spell_tag_id" {
+    expr = "length(`spell_tag_id`) = 16"
+  }
+  check "non-blank name" {
+    expr = "`name` != \"\""
+  }
+  without_rowid = true
+}
+table "spells_spell_tags" {
+  schema = schema.main
+  column "spell_id" {
+    type = blob
+    null = false
+  }
+  column "spell_tag_id" {
+    type = blob
+    null = false
+  }
+  primary_key {
+    columns = [column.spell_id, column.spell_tag_id]
+  }
+  foreign_key "spell_fk" {
+    columns = [column.spell_id]
+    ref_columns = [table.spells.column.spell_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  foreign_key "spell_tag_fk" {
+    columns = [column.spell_tag_id]
+    ref_columns = [table.spell_tags.column.spell_tag_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  check "16 byte spell_id" {
+    expr = "length(`spell_id`) = 16"
+  }
+  check "16 byte spell_tag_id" {
+    expr = "length(`spell_tag_id`) = 16"
+  }
+  without_rowid = true
+}
+table "spell_lists" {
+  schema = schema.main
+  column "spell_list_id" {
+    type = blob
+    null = false
+  }
+  column "name" {
+    type = text
+    null = false
+  }
+  primary_key {
+    columns = [column.spell_list_id]
+  }
+  check "16 byte spell_list_id" {
+    expr = "length(`spell_list_id`) = 16"
+  }
+  check "non-blank name" {
+    expr = "`name` != \"\""
+  }
+  without_rowid = true
+}
+table "spells_spell_lists" {
+  schema = schema.main
+  column "spell_id" {
+    type = blob
+    null = false
+  }
+  column "spell_list_id" {
+    type = blob
+    null = false
+  }
+  primary_key {
+    columns = [column.spell_id, column.spell_list_id]
+  }
+  foreign_key "spell_fk" {
+    columns = [column.spell_id]
+    ref_columns = [table.spells.column.spell_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  foreign_key "spell_list_fk" {
+    columns = [column.spell_list_id]
+    ref_columns = [table.spell_lists.column.spell_list_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  check "16 byte spell_id" {
+    expr = "length(`spell_id`) = 16"
+  }
+  check "16 byte spell_list_id" {
+    expr = "length(`spell_list_id`) = 16"
+  }
+  without_rowid = true
+}
 schema "main" {
 }
