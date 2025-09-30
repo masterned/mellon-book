@@ -1,10 +1,8 @@
 use turann::Builder;
 use uuid::Uuid;
 
-use super::Points;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ManeuverType {
+pub enum ManeuverKind {
     Attack,
     Save,
     Grapple,
@@ -16,7 +14,8 @@ pub struct Maneuver {
     #[builder(default = Uuid::new_v4)]
     pub uuid: Uuid,
     pub name: String,
-    #[builder(each = "cost")]
-    pub cost: Vec<Points>,
+    pub kind: ManeuverKind,
+    pub action_point_cost: u64,
+    pub stamina_point_cost: u64,
     pub description: String,
 }

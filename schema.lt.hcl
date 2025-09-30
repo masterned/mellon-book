@@ -953,5 +953,76 @@ table "spells_spell_lists" {
   }
   without_rowid = true
 }
+table "point_enhancements" {
+  schema = schema.main
+  column "point_enhancement_id" {
+    type = blob
+    null = false
+  }
+  column "name" {
+    type = text
+    null = false
+  }
+  column "action_point_cost" {
+    type = integer
+    null = false
+    default = 0
+  }
+  column "mana_point_cost" {
+    type = integer
+    null = false
+    default = 0
+  }
+  column "description" {
+    type = text
+    null = false
+  }
+  primary_key {
+    columns = [column.point_enhancement_id]
+  }
+  check "16 byte point_enhancement_id" {
+    expr = "length(`point_enhancement_id`) = 16"
+  }
+  check "non-empty name" {
+    expr = "`name` <> ''"
+  }
+  check "non-empty description" {
+    expr = "`description` <> ''"
+  }
+  without_rowid = true
+}
+table "point_enhancements_spells" {
+  schema = schema.main
+  column "point_enhancement_id" {
+    type = blob
+    null = false
+  }
+  column "spell_id" {
+    type = blob
+    null = false
+  }
+  primary_key {
+    columns = [column.point_enhancement_id, column.spell_id]
+  }
+  foreign_key "point_enhancement_fk" {
+    columns = [column.point_enhancement_id]
+    ref_columns = [table.point_enhancements.column.point_enhancement_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  foreign_key "spell_fk" {
+    columns = [column.spell_id]
+    ref_columns = [table.spells.column.spell_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  check "16 byte point_enhancement_id" {
+    expr = "length(`point_enhancement_id`) = 16"
+  }
+  check "16 byte spell_id" {
+    expr = "length(`spell_id`) = 16"
+  }
+  without_rowid = true
+}
 schema "main" {
 }

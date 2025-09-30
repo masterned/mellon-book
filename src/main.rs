@@ -95,12 +95,19 @@ async fn main() -> anyhow::Result<()> {
         println!("{attr:#?}");
     }
 
-    let fire_bolt = Spell::load(
+    // let fire_bolt = Spell::load(
+    //     &pool,
+    //     uuid::Uuid::from_u128(0x0199967326fe7954825fbbc78d2300a2),
+    // )
+    // .await?;
+    // println!("{fire_bolt:#?}");
+
+    let spell_list = SpellList::load(
         &pool,
-        uuid::Uuid::from_u128(0x0199967326fe7954825fbbc78d2300a2),
+        uuid::Uuid::from_u128(0x01999679B6397FDF9DAFAF18CE8BA4EF),
     )
     .await?;
-    println!("{fire_bolt:#?}");
+    println!("{spell_list:#?}");
 
     Ok(())
 }

@@ -1,17 +1,9 @@
 use anyhow::anyhow;
-use turann::Builder;
-use uuid::Uuid;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpellSchool {
     id: uuid::Uuid,
     name: String,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Points {
-    Action(u64),
-    Mana(u64),
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -60,37 +52,39 @@ impl Duration {
     }
 }
 
-#[derive(Builder, Clone, Debug, PartialEq)]
+#[derive(turann::Builder, Clone, Debug, PartialEq)]
 pub struct PointEnhancement {
-    #[builder(default = Uuid::new_v4)]
-    pub uuid: Uuid,
+    #[builder(default = uuid::Uuid::now_v7)]
+    pub id: uuid::Uuid,
     pub name: String,
-    #[builder(each = "cost")]
-    pub cost: Vec<Points>,
+    pub action_point_cost: u64,
+    pub mana_point_cost: u64,
     pub description: String,
 }
 
-#[derive(Builder, Clone, Debug, PartialEq)]
+#[derive(turann::Builder, Clone, Debug, PartialEq)]
 pub struct Spell {
-    #[builder(default = Uuid::new_v4)]
-    pub uuid: Uuid,
+    #[builder(default = uuid::Uuid::now_v7)]
+    pub id: uuid::Uuid,
     pub name: String,
     pub school: SpellSchool,
     pub has_verbal: bool,
     pub has_somatic: bool,
     pub has_material: bool,
-    pub cost: Vec<Points>,
+    pub action_point_cost: u64,
+    pub mana_point_cost: u64,
     pub range: Range,
     pub duration: Duration,
     pub sustained: bool,
     pub description: String,
+    pub point_enhancements: Vec<PointEnhancement>,
 }
 
 impl Spell {
     pub async fn load(pool: &sqlx::SqlitePool, id: uuid::Uuid) -> anyhow::Result<Spell> {
         let row = sqlx::query!(
             r#"
-                SELECT `spell_id` AS "uuid: uuid::Uuid"
+                SELECT `spell_id` AS "id: uuid::Uuid"
                     , spell.`name`
                     , `spell_school_id` AS "school_id: uuid::Uuid"
                     , school.`name` AS "school_name"
@@ -115,8 +109,27 @@ impl Spell {
         .fetch_one(pool)
         .await?;
 
+        let point_enhancements = sqlx::query_as!(
+            PointEnhancement,
+            r#"
+                SELECT `point_enhancement_id` AS "id: uuid::Uuid"
+                    , `name`
+                    , `action_point_cost` AS "action_point_cost: u64"
+                    , `mana_point_cost` AS "mana_point_cost: u64"
+                    , `description`
+                FROM `point_enhancements`
+                JOIN `point_enhancements_spells`
+                    USING (`point_enhancement_id`)
+                WHERE `spell_id` = ?1
+                ;
+            "#,
+            id
+        )
+        .fetch_all(pool)
+        .await?;
+
         Ok(Self {
-            uuid: row.uuid,
+            id: row.id,
             name: row.name,
             school: SpellSchool {
                 id: row.school_id,
@@ -125,23 +138,70 @@ impl Spell {
             has_verbal: row.has_verbal,
             has_somatic: row.has_somatic,
             has_material: row.has_material.unwrap_or_default(),
-            cost: vec![
-                Points::Action(row.action_point_cost as u64),
-                Points::Mana(row.mana_point_cost as u64),
-            ],
+            action_point_cost: row.action_point_cost as u64,
+            mana_point_cost: row.mana_point_cost as u64,
             range: Range::parse(&row.range_kind, row.range_value)?,
             duration: Duration::parse(&row.duration_kind, row.duration_value)?,
             sustained: row.sustained,
             description: row.description,
+            point_enhancements,
         })
     }
 }
 
-#[derive(Builder, Clone, Debug, Default, PartialEq)]
+#[derive(turann::Builder, Clone, Debug, Default, PartialEq)]
 pub struct SpellList {
-    #[builder(default = Uuid::new_v4)]
-    pub uuid: Uuid,
+    #[builder(default = uuid::Uuid::now_v7)]
+    pub id: uuid::Uuid,
     pub name: String,
     #[builder(each = "spell")]
     pub spells: Vec<Spell>,
+}
+
+impl SpellList {
+    pub async fn load(pool: &sqlx::SqlitePool, id: uuid::Uuid) -> anyhow::Result<SpellList> {
+        let list_details = sqlx::query!(
+            r#"
+                SELECT `spell_list_id` AS "id: uuid::Uuid"
+                    , `name`
+                FROM `spell_lists`
+                WHERE `spell_list_id` = ?1
+                LIMIT 1
+                ;
+            "#,
+            id
+        )
+        .fetch_one(pool)
+        .await?;
+
+        let spell_ids = sqlx::query!(
+            r#"
+                SELECT `spell_id`
+                FROM `spells_spell_lists`
+                WHERE `spell_list_id` = ?1
+                ;
+            "#,
+            id
+        )
+        .fetch_all(pool)
+        .await?;
+
+        let mut spells = vec![];
+
+        for spell_id_row in spell_ids {
+            spells.push(
+                Spell::load(
+                    pool,
+                    uuid::Uuid::from_slice(spell_id_row.spell_id.as_slice()).expect("boom"),
+                )
+                .await?,
+            );
+        }
+
+        Ok(Self {
+            id: list_details.id,
+            name: list_details.name,
+            spells,
+        })
+    }
 }

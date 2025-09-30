@@ -316,3 +316,16 @@ INSERT INTO `spells_spell_tags`
 VALUES (X'0199967326fe7954825fbbc78d2300a2', X'0199968302bc78d9a245f312ddecb3e6')
 ON CONFLICT (`spell_id`, `spell_tag_id`) DO NOTHING
 ;
+
+INSERT INTO `point_enhancements`
+    (`point_enhancement_id`, `name`, `action_point_cost`, `mana_point_cost`, `description`)
+VALUES (X'01999c5dc6b67c4cb5ae6b5e67fe9295', "Damage I (Fire)", 1, 0, "You deal +1 Fire damage.")
+, (X'01999c62e5ca7421b835b9bd813da70d', "Range", 1, 0, "You increase the range by +5 Spaces.")
+ON CONFLICT (`point_enhancement_id`) DO NOTHING
+;
+
+INSERT INTO `point_enhancements_spells`
+VALUES (X'01999c5dc6b67c4cb5ae6b5e67fe9295', X'0199967326fe7954825fbbc78d2300a2')
+, (X'01999c62e5ca7421b835b9bd813da70d', X'0199967326fe7954825fbbc78d2300a2')
+ON CONFLICT (`point_enhancement_id`, `spell_id`) DO NOTHING
+;
