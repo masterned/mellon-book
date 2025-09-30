@@ -726,13 +726,26 @@ table "spells" {
     null = false
     default = 0
   }
-  column "range" {
+  column "range_kind" {
     type = text
     null = false
   }
-  column "duration" {
+  column "range_value" {
+    type = integer
+    null = true
+  }
+  column "duration_kind" {
     type = text
     null = false
+  }
+  column "duration_value" {
+    type = integer
+    null = true
+  }
+  column "sustained" {
+    type = boolean
+    null = false
+    defaule = false
   }
   column "description" {
     type = text
@@ -756,11 +769,17 @@ table "spells" {
   check "16 byte spell_school_id" {
     expr = "length(`spell_school_id`) = 16"
   }
-  check "non-blank range" {
-    expr = "`range` != \"\""
+  check "valid range" {
+    expr = <<EOF
+      ((`range_kind` IN ('self', 'touch') AND `range_value` IS NULL) OR
+      (`range_kind` = 'spaces' AND `range_value` IS NOT NULL))
+    EOF
   }
-  check "non-blank duration" {
-    expr = "`duration` != \"\""
+  check "valid duration" {
+    expr = <<EOF
+      ((`duration_kind` = 'instant' AND `duration_value` IS NULL) OR
+      (`duration_kind` IN ('minute', 'hour', 'round') AND `duration_value` IS NOT NULL))
+    EOF
   }
   check "non-blank description" {
     expr = "`description` != \"\""
