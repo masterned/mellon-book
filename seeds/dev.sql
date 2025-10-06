@@ -329,3 +329,41 @@ VALUES (X'01999c5dc6b67c4cb5ae6b5e67fe9295', X'0199967326fe7954825fbbc78d2300a2'
 , (X'01999c62e5ca7421b835b9bd813da70d', X'0199967326fe7954825fbbc78d2300a2')
 ON CONFLICT (`point_enhancement_id`, `spell_id`) DO NOTHING
 ;
+
+INSERT INTO `items`
+    (`item_id`, `name`)
+VALUES (X'0199b6adea827ccea30d79b0b5820617', "Hand Axe")
+ON CONFLICT (`item_id`) DO NOTHING
+;
+
+INSERT INTO `weapons`
+    (`weapon_id`, `type`)
+VALUES (X'0199b6adea827ccea30d79b0b5820617', "Melee")
+ON CONFLICT (`weapon_id`) DO NOTHING
+;
+
+INSERT INTO `weapon_styles`
+    (`weapon_style_id`, `name`, `description`, `damage_type`)
+VALUES (X'0199b6b3df197145a60fef49ad9698aa', "Axe", "You deal +1 damage against creatures that are Bleeding", "Slashing")
+ON CONFLICT (`weapon_style_id`) DO NOTHING
+;
+
+INSERT INTO `weapons_weapon_styles`
+    (`weapon_id`, `weapon_style_id`)
+VALUES (X'0199b6adea827ccea30d79b0b5820617', X'0199b6b3df197145a60fef49ad9698aa')
+ON CONFLICT (`weapon_id`, `weapon_style_id`) DO NOTHING
+;
+
+INSERT INTO `weapon_properties`
+    (`weapon_property_id`, `name`, `description`, `required_weapon_property_id`)
+VALUES (X'0199b6ba413671bdbb86189f5beacbb5', "Concealable", "Drawing the Weapon doesn't provoke Opportunity Attacks.", NULL)
+, (X'0199b6ba5b2a768fb474f05b92027443', "Toss (5/10)", "You can throw the Weapon to make a Ranged Martial Attack (5/10)", NULL)
+ON CONFLICT (`weapon_property_id`) DO NOTHING
+;
+
+INSERT INTO `weapons_weapon_properties`
+    (`weapon_id`, `weapon_property_id`)
+VALUES (X'0199b6adea827ccea30d79b0b5820617', X'0199b6ba413671bdbb86189f5beacbb5')
+, (X'0199b6adea827ccea30d79b0b5820617', X'0199b6ba5b2a768fb474f05b92027443')
+ON CONFLICT (`weapon_id`, `weapon_property_id`) DO NOTHING
+;

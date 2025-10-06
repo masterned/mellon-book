@@ -688,7 +688,7 @@ table "items" {
     expr = "length(`item_id`) = 16"
   }
   check "non-blank name" {
-    expr = "`name` != \"\""
+    expr = "`name` <> ''"
   }
   without_rowid = true
 }
@@ -1023,6 +1023,185 @@ table "point_enhancements_spells" {
     expr = "length(`spell_id`) = 16"
   }
   without_rowid = true
+}
+table "weapon_styles" {
+  schema = schema.main
+  column "weapon_style_id" {
+    type = blob
+    null = false
+  }
+  column "name" {
+    type = text
+    null = false
+  }
+  column "description" {
+    type = text
+    null = false
+  }
+  column "damage_type" {
+    type = text
+    null = false
+  }
+  primary_key {
+    columns = [column.weapon_style_id]
+  }
+  check "16 byte weapon_style_id" {
+    expr = "length(`weapon_style_id`) = 16"
+  }
+  check "non-empty name" {
+    expr = "`name` <> ''"
+  }
+  check "non-empty description" {
+    expr = "`description` <> ''"
+  }
+  check "enum damage_type" {
+    expr = "`damage_type` IN ('Bludgeoning', 'Piercing', 'Slashing')"
+  }
+  without_rowid = true
+}
+table "weapons" {
+  schema = schema.main
+  column "weapon_id" {
+    type = blob
+    null = false
+  }
+  column "type" {
+    type = text
+    null = false
+  }
+  primary_key {
+    columns = [column.weapon_id]
+  }
+  foreign_key "item_fk" {
+    columns = [column.weapon_id]
+    ref_columns = [table.items.column.item_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  check "16 byte weapon_id" {
+    expr = "length(`weapon_id`) = 16"
+  }
+  check "non-empty type" {
+    expr = "`type` <> ''"
+  }
+  check "enum type" {
+    expr = "`type` IN ('Melee', 'Ranged')"
+  }
+  without_rowid = true
+}
+table "weapons_weapon_styles" {
+  schema = schema.main
+  column "weapon_id" {
+    type = blob
+    null = false
+  }
+  column "weapon_style_id" {
+    type = blob
+    null = false
+  }
+  primary_key {
+    columns =[column.weapon_id, column.weapon_style_id]
+  }
+  foreign_key "weapon_fk" {
+    columns = [column.weapon_id]
+    ref_columns = [table.weapons.column.weapon_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  foreign_key "weapon_style_fk" {
+    columns = [column.weapon_style_id]
+    ref_columns = [table.weapon_styles.column.weapon_style_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  check "16 byte weapon_id" {
+    expr = "length(`weapon_id`) = 16"
+  }
+  check "16 byte weapon_style_id" {
+    expr = "length(`weapon_style_id`) = 16"
+  }
+  without_rowid = true
+}
+table "weapon_properties" {
+  schema = schema.main
+  column "weapon_property_id" {
+    type = blob
+    null = false
+  }
+  column "name" {
+    type = text
+    null = false
+  }
+  column "description" {
+    type = text
+    null = false
+  }
+  column "cost" {
+    type = integer
+    null = false
+    default = 1
+  }
+  column "required_weapon_property_id" {
+    type = blob
+    null = true
+  }
+  primary_key {
+    columns = [column.weapon_property_id]
+  }
+  foreign_key "required_weapon_property_fk" {
+    columns = [column.required_weapon_property_id]
+    ref_columns = [table.weapon_properties.column.weapon_property_id]
+    on_update = NO_ACTION
+    on_delete = SET_NULL
+  }
+  check "16 byte weapon_property_id" {
+    expr = "length(`weapon_property_id`) = 16"
+  }
+  check "non-empty name" {
+    expr = "`name` <> ''"
+  }
+  check "non-empty description" {
+    expr = "`description` <> ''"
+  }
+  check "16 byte required_weapon_property_id" {
+    expr = "length(`required_weapon_property_id`) = 16"
+  }
+  check "non-self-dependent" {
+    expr = "weapon_property_id <> required_weapon_property_id"
+  }
+  without_rowid = true
+}
+table "weapons_weapon_properties" {
+  schema = schema.main
+  column "weapon_id" {
+    type = blob
+    null = false
+  }
+  column "weapon_property_id" {
+    type = blob
+    null = false
+  }
+  primary_key {
+    columns = [column.weapon_id, column.weapon_property_id]
+  }
+  foreign_key "weapon_fk" {
+    columns = [column.weapon_id]
+    ref_columns = [table.weapons.column.weapon_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  foreign_key "weapon_property_fk" {
+    columns = [column.weapon_property_id]
+    ref_columns = [table.weapon_properties.column.weapon_property_id]
+    on_update = NO_ACTION
+    on_delete = CASCADE
+  }
+  check "16 byte weapon_id" {
+    expr = "length(`weapon_id`) = 16"
+  }
+  check "16 byte weapon_property_id" {
+    expr = "length(`weapon_property_id`) = 16"
+  }
 }
 schema "main" {
 }
