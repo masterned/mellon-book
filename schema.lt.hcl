@@ -749,7 +749,7 @@ table "spells" {
   }
   column "description" {
     type = text
-    null = false
+    null = true
   }
   primary_key {
     columns = [column.spell_id]
@@ -780,9 +780,6 @@ table "spells" {
       ((`duration_kind` = 'Instant' AND `duration_value` IS NULL) OR
       (`duration_kind` IN ('Minute', 'Hour', 'Round') AND `duration_value` IS NOT NULL))
     EOF
-  }
-  check "non-blank description" {
-    expr = "`description` <> ''"
   }
   without_rowid = true
 }
@@ -1202,6 +1199,67 @@ table "weapons_weapon_properties" {
   check "16 byte weapon_property_id" {
     expr = "length(`weapon_property_id`) = 16"
   }
+}
+table "spell_effects" {
+  schema = schema.main
+  column "spell_effect_id" {
+    type = blob
+    null = false
+  }
+  column "name" {
+    type = text
+    null = false
+  }
+  column "description" {
+    type = text
+    null = false
+  }
+  primary_key {
+    columns = [column.spell_effect_id]
+  }
+  check "16 byte spell_effect_id" {
+    expr = "length(`spell_effect_id`) = 16"
+  }
+  check "non-empty name" {
+    expr = "`name` <> ''"
+  }
+  check "non-empty description" {
+    expr = "`description` <> ''"
+  }
+  without_rowid = true
+}
+table "spells_spell_effects" {
+  schema = schema.main
+  column "spell_id" {
+    type = blob
+    null = false
+  }
+  column "spell_effect_id" {
+    type = blob
+    null = false
+  }
+  primary_key {
+    columns = [column.spell_id, column.spell_effect_id]
+  }
+  foreign_key "spell_fk" {
+    columns     = [column.spell_id]
+    ref_columns = [table.spells.column.spell_id]
+    on_update   = NO_ACTION
+    on_delete   = CASCADE
+  }
+  foreign_key "spell_effect_fk" {
+    columns     = [column.spell_effect_id]
+    ref_columns = [table.spell_effects.column.spell_effect_id]
+    on_update   = NO_ACTION
+    on_delete   = CASCADE
+  }
+  check "16 byte spell_id" {
+    expr = "length(`spell_id`) = 16"
+  }
+  check "16 byte spell_effect_id" {
+    expr = "length(`spell_effect_id`) = 16"
+  }
+  without_rowid = true
 }
 schema "main" {
 }

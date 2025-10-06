@@ -81,6 +81,40 @@ pub struct Spell {
 }
 
 impl Spell {
+    async fn create_description_from_effects(
+        pool: &sqlx::SqlitePool,
+        id: uuid::Uuid,
+    ) -> anyhow::Result<String> {
+        let mut description: Vec<String> = vec![];
+
+        let spell_effects = sqlx::query!(
+            r#"
+                SELECT `name`
+                    , `description`
+                FROM `spell_effects`
+                JOIN `spells_spell_effects`
+                    USING (`spell_effect_id`)
+                WHERE `spell_id` = ?1
+                ;
+            "#,
+            id
+        )
+        .fetch_all(pool)
+        .await?;
+
+        for spell_effect in spell_effects {
+            description.push(format!(
+                "{}: {}",
+                spell_effect.name, spell_effect.description
+            ));
+        }
+
+        Ok(format!(
+            "You can produce 1 of the following effects:\n{}",
+            description.join("\n")
+        ))
+    }
+
     pub async fn load(pool: &sqlx::SqlitePool, id: uuid::Uuid) -> anyhow::Result<Spell> {
         let row = sqlx::query!(
             r#"
@@ -128,6 +162,11 @@ impl Spell {
         .fetch_all(pool)
         .await?;
 
+        let description = match row.description {
+            Some(description) => description,
+            None => Self::create_description_from_effects(pool, id).await?,
+        };
+
         Ok(Self {
             id: row.id,
             name: row.name,
@@ -143,7 +182,7 @@ impl Spell {
             range: Range::parse(&row.range_kind, row.range_value)?,
             duration: Duration::parse(&row.duration_kind, row.duration_value)?,
             sustained: row.sustained,
-            description: row.description,
+            description,
             point_enhancements,
         })
     }

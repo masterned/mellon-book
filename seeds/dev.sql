@@ -288,8 +288,24 @@ ON CONFLICT (`spell_school_id`) DO NOTHING
 
 INSERT INTO `spells`
     (`spell_id`, `name`, `spell_school_id`, `action_point_cost`, `mana_point_cost`, `range_kind`, `range_value`, `duration_kind`, `duration_value`, `sustained`, `description`)
-VALUES (X'0199967326fe7954825fbbc78d2300a2', "Fire Bolt", X'01999676d58d7840b02951505eb57504', 1, 0, "Spaces", 10, "Instant", NULL, false, "You can make a Spell Check against the PD of a target within range. Hit: The target takes 2 Fire damage.")
+VALUES (X'0199967326fe7954825fbbc78d2300a2', "Fire Bolt", X'01999676d58d7840b02951505eb57504', 1, 0, "Spaces", 10, "Instant", NULL, false, NULL)
 ON CONFLICT (`spell_id`) DO NOTHING
+;
+
+INSERT INTO `spell_effects`
+    (`spell_effect_id`, `name`, `description`)
+VALUES (X'0199b77066f17129b38fbae190de4194', "Spell Attack (Fire II)", "You can make a Spell Check against the PD of a target within range. Hit: The target takes 2 Fire damage.")
+, (X'0199b787e5677f238326c33865489868', "Fire Orb", "A flickering flame appears in your hand...")
+, (X'0199b788024c75f9ae90fc6265abbae8', "Cantrip Passive (Burning)", "You deal +1 damage against creatures that are Burning.")
+ON CONFLICT (`spell_effect_id`) DO NOTHING
+;
+
+INSERT INTO `spells_spell_effects`
+    (`spell_id`, `spell_effect_id`)
+VALUES (X'0199967326fe7954825fbbc78d2300a2', X'0199b77066f17129b38fbae190de4194')
+, (X'0199967326fe7954825fbbc78d2300a2', X'0199b787e5677f238326c33865489868')
+, (X'0199967326fe7954825fbbc78d2300a2', X'0199b788024c75f9ae90fc6265abbae8')
+ON CONFLICT (`spell_id`, `spell_effect_id`) DO NOTHING
 ;
 
 INSERT INTO `spell_lists`
