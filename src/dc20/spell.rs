@@ -17,9 +17,9 @@ pub enum Range {
 impl Range {
     fn parse(kind: &str, value: Option<i64>) -> anyhow::Result<Range> {
         match kind {
-            "self" => Ok(Range::Caster),
-            "touch" => Ok(Range::Touch),
-            "spaces" => Ok(Range::Spaces(value.ok_or(anyhow!("invalid range"))? as u64)),
+            "Self" => Ok(Range::Caster),
+            "Touch" => Ok(Range::Touch),
+            "Spaces" => Ok(Range::Spaces(value.ok_or(anyhow!("invalid range"))? as u64)),
             _ => Err(anyhow!("invalid range")),
         }
     }
@@ -37,14 +37,14 @@ pub enum Duration {
 impl Duration {
     fn parse(kind: &str, value: Option<i64>) -> anyhow::Result<Duration> {
         match kind {
-            "instant" => Ok(Duration::Instant),
-            "minutes" => Ok(Duration::Minutes(
+            "Instant" => Ok(Duration::Instant),
+            "Minutes" => Ok(Duration::Minutes(
                 value.ok_or(anyhow!("invalid duration"))? as u64
             )),
-            "hours" => Ok(Duration::Hours(
+            "Hours" => Ok(Duration::Hours(
                 value.ok_or(anyhow!("invalid duration"))? as u64
             )),
-            "rounds" => Ok(Duration::Rounds(
+            "Rounds" => Ok(Duration::Rounds(
                 value.ok_or(anyhow!("invalid duration"))? as u64
             )),
             _ => Err(anyhow!("invalid duration")),

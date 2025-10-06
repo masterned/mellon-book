@@ -227,7 +227,7 @@ table "classes" {
     expr = "length(`class_id`) = 16"
   }
   check "non-blank name" {
-    expr = "`name` != \"\""
+    expr = "`name` <> ''"
   }
 }
 table "subclasses" {
@@ -247,7 +247,7 @@ table "subclasses" {
     expr = "length(`subclass_id`) = 16"
   }
   check "non-blank name" {
-    expr = "`name` != \"\""
+    expr = "`name` <> ''"
   }
 }
 table "classes_subclasses" {
@@ -564,7 +564,7 @@ table "backgrounds_languages" {
     expr = "length(`language_id`) = 16"
   }
   check "enum fluency" {
-    expr = "`fluency` in (1, 2)"
+    expr = "`fluency` IN (1, 2)"
   }
   without_rowid = true
 }
@@ -764,25 +764,25 @@ table "spells" {
     expr = "length(`spell_id`) = 16"
   }
   check "non-blank name" {
-    expr = "`name` != \"\""
+    expr = "`name` <> ''"
   }
   check "16 byte spell_school_id" {
     expr = "length(`spell_school_id`) = 16"
   }
   check "valid range" {
     expr = <<EOF
-      ((`range_kind` IN ('self', 'touch') AND `range_value` IS NULL) OR
-      (`range_kind` = 'spaces' AND `range_value` IS NOT NULL))
+      ((`range_kind` IN ('Self', 'Touch') AND `range_value` IS NULL) OR
+      (`range_kind` = 'Spaces' AND `range_value` IS NOT NULL))
     EOF
   }
   check "valid duration" {
     expr = <<EOF
-      ((`duration_kind` = 'instant' AND `duration_value` IS NULL) OR
-      (`duration_kind` IN ('minute', 'hour', 'round') AND `duration_value` IS NOT NULL))
+      ((`duration_kind` = 'Instant' AND `duration_value` IS NULL) OR
+      (`duration_kind` IN ('Minute', 'Hour', 'Round') AND `duration_value` IS NOT NULL))
     EOF
   }
   check "non-blank description" {
-    expr = "`description` != \"\""
+    expr = "`description` <> ''"
   }
   without_rowid = true
 }
@@ -841,7 +841,7 @@ table "spell_schools" {
     expr = "length(`spell_school_id`) = 16"
   }
   check "non-blank name" {
-    expr = "`name` != \"\""
+    expr = "`name` <> ''"
   }
   without_rowid = true
 }
@@ -862,7 +862,7 @@ table "spell_tags" {
     expr = "length(`spell_tag_id`) = 16"
   }
   check "non-blank name" {
-    expr = "`name` != \"\""
+    expr = "`name` <> ''"
   }
   without_rowid = true
 }
@@ -916,7 +916,7 @@ table "spell_lists" {
     expr = "length(`spell_list_id`) = 16"
   }
   check "non-blank name" {
-    expr = "`name` != \"\""
+    expr = "`name` <> ''"
   }
   without_rowid = true
 }

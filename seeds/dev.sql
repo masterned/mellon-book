@@ -288,7 +288,7 @@ ON CONFLICT (`spell_school_id`) DO NOTHING
 
 INSERT INTO `spells`
     (`spell_id`, `name`, `spell_school_id`, `action_point_cost`, `mana_point_cost`, `range_kind`, `range_value`, `duration_kind`, `duration_value`, `sustained`, `description`)
-VALUES (X'0199967326fe7954825fbbc78d2300a2', "Fire Bolt", X'01999676d58d7840b02951505eb57504', 1, 0, "spaces", 10, "instant", NULL, false, "You can make a Spell Check against the PD of a target within range. Hit: The target takes 2 Fire damage.")
+VALUES (X'0199967326fe7954825fbbc78d2300a2', "Fire Bolt", X'01999676d58d7840b02951505eb57504', 1, 0, "Spaces", 10, "Instant", NULL, false, "You can make a Spell Check against the PD of a target within range. Hit: The target takes 2 Fire damage.")
 ON CONFLICT (`spell_id`) DO NOTHING
 ;
 
