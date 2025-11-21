@@ -76,7 +76,7 @@ ON CONFLICT (`ancestry_trait_id`) DO NOTHING
 ;
 
 INSERT INTO `ancestries_ancestry_traits`
-VALUES (X'01993b864c8277f7b9b4790f8e935a32', X'0199182824927164b25d368464947b6a', X'01991828aa3c7fa9a24bc2afacaa349d')
+VALUES (X'0199182824927164b25d368464947b6a', X'01991828aa3c7fa9a24bc2afacaa349d', FALSE)
 ON CONFLICT (`ancestry_id`, `ancestry_trait_id`) DO NOTHING
 ;
 

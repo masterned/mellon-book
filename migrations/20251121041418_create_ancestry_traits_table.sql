@@ -1,0 +1,9 @@
+CREATE TABLE ancestry_traits (
+    ancestry_trait_id BLOB    PRIMARY KEY
+        CHECK (length(ancestry_trait_id) = 16),
+    name              TEXT    NOT NULL
+        CHECK (name <> ''),
+    description       TEXT    NOT NULL
+        CHECK (description <> ''),
+    cost              INTEGER NOT NULL
+) STRICT, WITHOUT ROWID;

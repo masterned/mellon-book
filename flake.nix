@@ -33,7 +33,6 @@
       {
         devShells.default = mkShell {
           buildInputs = [
-            atlas
             bacon
             cargo
             clippy
@@ -44,7 +43,6 @@
             rust-analyzer
             sqlite
             sqlx-cli
-            terraform-ls
           ];
 
           nativeBuildInputs = [
