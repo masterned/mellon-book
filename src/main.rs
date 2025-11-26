@@ -109,5 +109,5 @@ async fn main() -> anyhow::Result<()> {
     .await?;
     println!("{spell_list:#?}");
 
-    Ok(())
+    Ok(pool.close().await)
 }
