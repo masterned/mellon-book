@@ -113,7 +113,7 @@ impl Level {
             r#"
                 SELECT `character_level_id` AS "id: uuid::Uuid"
                     , `character_id` AS "character_id: uuid::Uuid"
-                    , `level` AS "level: u8"
+                    , `level` AS "level: u32"
                 FROM `character_levels`
                 WHERE `character_level_id` = ?1
                 LIMIT 1

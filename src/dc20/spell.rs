@@ -122,8 +122,8 @@ impl Spell {
                     , spell.`name`
                     , `spell_school_id` AS "school_id: uuid::Uuid"
                     , school.`name` AS "school_name"
-                    , has_verbal
-                    , has_somatic
+                    , has_verbal AS "has_verbal: bool"
+                    , has_somatic AS "has_somatic: bool"
                     , COALESCE(EXISTS (SELECT 1 FROM `spell_material_components` WHERE `spell_id` = ?1), false) AS "has_material: bool"
                     , action_point_cost
                     , mana_point_cost
@@ -131,7 +131,7 @@ impl Spell {
                     , range_value
                     , duration_kind
                     , duration_value
-                    , sustained
+                    , sustained as "sustained: bool"
                     , description
                 FROM `spells` AS spell
                 JOIN `spell_schools` AS school
